@@ -15,56 +15,21 @@
 
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <meta name="mobile-web-app-capable" content="yes">
-    <title>Audio Worklet and WebAssembly | WebAudio Samples</title>
-  </head>
-  <body>
-    <button id="btn-start">Start</button>
 
-    <script type="module">
-      // import WorkletDemoBuilder from '../../assets/WorkletDemoBuilder.js'
-      // import PageData from './PageData.js';
-      (async () => {
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Audio Worklet and WebAssembly | WebAudio Samples</title>
+</head>
 
-        function unlockAudioContext(audioCtx) {
-          if (audioCtx.state !== 'suspended') return;
-          const b = document.body;
-          const events = ['touchstart','touchend', 'mousedown','keydown'];
-          events.forEach(e => b.addEventListener(e, unlock, false));
-          function unlock() { audioCtx.resume().then(clean); }
-          function clean() { events.forEach(e => b.removeEventListener(e, unlock)); }
-        }
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+<body>
+  <button id="btn-start">Start</button>
+  <script src="./index.js">
 
-      await audioCtx.audioWorklet.addModule('wasm-worklet-processor.js');
-      const oscillator = new OscillatorNode(audioCtx);
-      const bypasser = new AudioWorkletNode(audioCtx, 'wasm-worklet-processor');
-      oscillator.connect(bypasser).connect(audioCtx.destination);
-      unlockAudioContext(audioCtx);
-
-      bypasser.parameters.playing.value = 0;
-      console.log(audioCtx)
-
-      oscillator.start();
-      var btnStart = document.getElementById("btn-start");
-      btnStart.onclick = () => {
-          if (audioCtx.state === "suspended") audioCtx.resume();
-        const playing = bypasser.parameters.get("playing").value;
-        if (playing === 1) {
-          bypasser.parameters.get("playing").value = 0;
-            btnStart.textContent = "Start";
-        } else {
-          bypasser.parameters.get("playing").value = 1;
-            btnStart.textContent = "Stop";
-        }
-      };
-
-    })();
 
       // WorkletDemoBuilder(PageData, demoCode);
-    </script>
-  </body>
+  </script>
+</body>
+
 </html>
