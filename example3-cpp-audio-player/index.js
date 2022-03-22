@@ -31,6 +31,10 @@ class SimpleNode extends AudioWorkletNode {
   constructor(context) {
     super(context, "simple-processor");
   }
+  /** @param {number} position set playhead in seconds */
+  setPosition(position) {
+    this.port.postMessage({ position });
+  }
 }
 
 //@ts-check
@@ -161,10 +165,10 @@ function muteUnmuteTrack(btn) {
 }
 
 (async () => {
-  let decodeddecodedAudioBuffer;
+  let decodedAudioBuffer;
   let audioArrayBuffer;
 
-//   var audioCtx =
+  //   var audioCtx =
   audioCtx.audioWorklet.addModule("processor.js");
 
   const response = await fetch(audioUrl);
@@ -184,14 +188,17 @@ function muteUnmuteTrack(btn) {
 
   drawBuffer(canvas0, decodedAudioBuffer, "red", 1000, 300);
   /** @type {import("./operable-audio-buffer.js").default} */
-//   const operabledecodedAudioBuffer = Object.setPrototypeOf(
-//     decodedAudioBuffer,
-//     OperabledecodedAudioBuffer.prototype
-//   );
+  //   const operabledecodedAudioBuffer = Object.setPrototypeOf(
+  //     decodedAudioBuffer,
+  //     OperabledecodedAudioBuffer.prototype
+  //   );
   const node = new SimpleNode(audioCtx);
+  //   const node = new SimpleNode(audioCtx);
+  const source = audioCtx.createBufferSource();
+  source.buffer = decodedAudioBuffer;
 
-//   node.setAudio(operabledecodedAudioBuffer.toArray());
-  node.connect(audioCtx.destination);
+  //   node.setAudio(operabledecodedAudioBuffer.toArray());
+  source.connect(node).connect(audioCtx.destination);
   connectPlugin(node, gainNode);
   node.parameters.get("playing").value = 0;
   node.parameters.get("loop").value = 1;
@@ -214,6 +221,7 @@ function muteUnmuteTrack(btn) {
   btnStart.onclick = () => {
     if (audioCtx.state === "suspended") {
       audioCtx.resume();
+      source.start();
     }
     const playing = node.parameters.get("playing").value;
     if (playing === 1) {

@@ -55,7 +55,7 @@ class SimpleProcessor extends AudioWorkletProcessor {
     let input = inputs[0];
     let output = outputs[0];
     const bufferSize = outputs[0][0].length;
-    // const audioLength = input.length;
+    const audioLength = input.length;
 
     // For this given render quantum, the channel count of the node is fixed
     // and identical for the input and the output.
@@ -71,14 +71,14 @@ class SimpleProcessor extends AudioWorkletProcessor {
       const playing = parameters.playing[0];
       const loop = parameters.loop[0];
       if (!playing) continue; // Not playing
-      //   if (this.playhead >= audioLength) {
-      // Play was finished
-      if (loop) this.playhead = 0;
-      // Loop just enabled, reset playhead
-    //   else continue; // EOF without loop
-      //   }
-      console.log("playing " );
-      console.log(i);
+      if (this.playhead >= audioLength) {
+        //   // Play was finished
+        if (loop) this.playhead = 0;
+        // Loop just enabled, reset playhead
+        else continue; // EOF without loop
+      }
+      //   console.log("playing " );
+      //   console.log(i);
       for (let channel = 0; channel < channelCount; ++channel) {
         this._heapInputBuffer.getChannelData(channel).set(input[channel]);
       }
