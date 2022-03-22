@@ -1,0 +1,12 @@
+body {position :relative ; background-color: wheat;}
+#waveform{
+    position: absolute;
+    height : auto ; 
+    width: auto;
+    top:120px;
+    max-width:1206px;
+    min-width:1206px;
+    overflow:auto;
+
+}
+#waveform #layer0 {position: absolute; ; top:0px;  border-color: black; border-radius: 20px;  border:black 3px solid;}
