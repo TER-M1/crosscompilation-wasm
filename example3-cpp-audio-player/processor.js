@@ -26,7 +26,16 @@ class SimpleProcessor extends AudioWorkletProcessor {
 
   constructor(options) {
     super(options);
+    this.audio = null;
     this.playhead = 0;
+
+    this.port.onmessage = (e) => {
+      if (e.data.audio) {
+        this.audio = e.data.audio;
+      } else if (typeof e.data.position === "number") {
+        this.playhead = e.data.position * 44100;
+      }
+    };
 
     this._heapInputBuffer = new HeapAudioBuffer(
       Module,
@@ -67,30 +76,21 @@ class SimpleProcessor extends AudioWorkletProcessor {
     this._heapOutputBuffer.adaptChannel(channelCount);
 
     // Copy-in, process and copy-out.
-    for (let i = 0; i < bufferSize; i++) {
-      const playing = parameters.playing[0];
-      const loop = parameters.loop[0];
-      if (!playing) continue; // Not playing
-      if (this.playhead >= audioLength) {
-        //   // Play was finished
-        if (loop) this.playhead = 0;
-        // Loop just enabled, reset playhead
-        else continue; // EOF without loop
-      }
-      //   console.log("playing " );
-      //   console.log(i);
+    const playing = parameters.playing[0];
+    if (playing) {
       for (let channel = 0; channel < channelCount; ++channel) {
         this._heapInputBuffer.getChannelData(channel).set(input[channel]);
       }
-      this._processPerf.processPerf(
+
+      this.playhead = this._processPerf.processPerf(
         this._heapInputBuffer.getHeapAddress(),
         this._heapOutputBuffer.getHeapAddress(),
-        channelCount
+        channelCount,
+        this.playhead
       );
       for (let channel = 0; channel < channelCount; ++channel) {
         output[channel].set(this._heapOutputBuffer.getChannelData(channel));
       }
-      this.playhead++;
     }
     return true;
   }

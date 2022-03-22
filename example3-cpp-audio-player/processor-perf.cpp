@@ -9,19 +9,26 @@ class ProcessorPerf
 {
 public:
     ProcessorPerf() {}
-    void processPerf(uintptr_t input_ptr, uintptr_t output_ptr, int channel_count)
+    int processPerf(
+        uintptr_t input_ptr,
+        uintptr_t output_ptr,
+        int channel_count,
+        int play_head)
     {
-        float *input_buffer = reinterpret_cast<float *>(input_ptr);
-        float *output_buffer = reinterpret_cast<float *>(output_ptr);
+        float **input_buffer = reinterpret_cast<float **>(input_ptr);
+        float **output_buffer = reinterpret_cast<float **>(output_ptr);
 
-        // Bypasses the data. By design, the channel count will always be the same
-        // for |input_buffer| and |output_buffer|.
-        for (unsigned channel = 0; channel < channel_count; ++channel)
+        for (int i = 0; i < kRenderQuantumFrames; i++)
         {
-            output_buffer = output_buffer + channel * kRenderQuantumFrames;
-            input_buffer = input_buffer + channel * kRenderQuantumFrames;
-            memcpy(output_buffer, input_buffer, kBytesPerChannel);
+            // int last_quantum_frame =
+            // if (!playing) continue;
+            for (unsigned channel = 0; channel < channel_count; ++channel)
+            {
+                *(output_buffer + (channel * kRenderQuantumFrames) + i) = *(input_buffer + (channel * kRenderQuantumFrames) + i);
+            }
+            play_head++;
         }
+        return play_head;
     }
 };
 

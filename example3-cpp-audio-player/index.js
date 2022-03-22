@@ -35,13 +35,20 @@ class SimpleNode extends AudioWorkletNode {
   setPosition(position) {
     this.port.postMessage({ position });
   }
+  /**
+   * @param {Float32Array[]} audio
+   */
+  setAudio(audio) {
+    this.port.postMessage({ audio });
+  }
 }
 
 //@ts-check
 
 // const audioUrl = "https://wasabi.i3s.unice.fr/WebAudioPluginBank/BasketCaseGreendayriffDI.mp3";
-const audioUrl = "./song/BasketCaseGreendayriffDI.mp3";
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const audioUrl = "./song/Flute_-_L._Club.mp3";
+// const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+const audioCtx = new AudioContext();
 const gainNode = audioCtx.createGain();
 /** @type {HTMLButtonElement} */
 // @ts-ignore
@@ -194,10 +201,10 @@ function muteUnmuteTrack(btn) {
   //   );
   const node = new SimpleNode(audioCtx);
   //   const node = new SimpleNode(audioCtx);
-  const source = audioCtx.createBufferSource();
+    const source = audioCtx.createBufferSource();
   source.buffer = decodedAudioBuffer;
 
-  //   node.setAudio(operabledecodedAudioBuffer.toArray());
+  //   node.setAudio(decodedAudioBuffer);
   source.connect(node).connect(audioCtx.destination);
   connectPlugin(node, gainNode);
   node.parameters.get("playing").value = 0;
