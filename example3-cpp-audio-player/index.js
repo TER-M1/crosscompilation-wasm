@@ -46,7 +46,7 @@ class SimpleNode extends AudioWorkletNode {
 //@ts-check
 
 // const audioUrl = "https://wasabi.i3s.unice.fr/WebAudioPluginBank/BasketCaseGreendayriffDI.mp3";
-const audioUrl = "./song/Flute_-_L._Club.mp3";
+const audioUrl = "./song/BasketCaseGreendayriffDI.mp3";
 // const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const audioCtx = new AudioContext();
 const gainNode = audioCtx.createGain();
