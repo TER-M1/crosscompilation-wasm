@@ -3,7 +3,7 @@ import {
     RENDER_QUANTUM_FRAMES,
     MAX_CHANNEL_COUNT,
     HeapAudioBuffer,
-} from "./lib/wasm-audio-helper.js";
+} from "../../lib/wasm-audio-helper.js";
 
 class SimpleProcessor extends AudioWorkletProcessor {
     /** @type {AudioParamDescriptor[]} */

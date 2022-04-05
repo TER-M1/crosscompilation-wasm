@@ -21,8 +21,8 @@ class SimpleNode extends AudioWorkletNode {
 
 // const audioUrl = "https://wasabi.i3s.unice.fr/WebAudioPluginBank/BasketCaseGreendayriffDI.mp3";
 const audioUrl = "./song/BasketCaseGreendayriffDI.mp3";
-// const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const audioCtx = new AudioContext();
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+// const audioCtx = new AudioContext();
 const gainNode = audioCtx.createGain();
 /** @type {HTMLButtonElement} */
 // @ts-ignore
@@ -147,14 +147,14 @@ function muteUnmuteTrack(btn) {
 
 (async () => {
     const { default: OperableAudioBuffer } = await import(
-        "./operable-audio-buffer.js"
+        "./src/js/operable-audio-buffer.js"
     );
 
     let decodedAudioBuffer;
     let audioArrayBuffer;
 
     //   var audioCtx =
-    await audioCtx.audioWorklet.addModule("processor.js");
+    await audioCtx.audioWorklet.addModule("./src/js/processor.js");
 
     const response = await fetch(audioUrl);
     audioArrayBuffer = await response.arrayBuffer();
