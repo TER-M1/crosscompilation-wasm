@@ -40,6 +40,7 @@ const btnTime = document.getElementById("time");
 // @ts-ignore
 const btnRestart = document.getElementById("restart");
 
+const mount = document.getElementById("mount");
 var zoom = 1;
 var x;
 
@@ -130,6 +131,11 @@ const connectPlugin = (sourceNode, audioNode) => {
     audioNode.connect(audioCtx.destination);
 };
 
+const mountPlugin = (domModel) => {
+    mount.innerHTML = '';
+    mount.appendChild(domModel);
+};
+
 function changeVol(vol) {
     if (vol.value == 0) {
         gainNode.gain.value = -1;
@@ -184,6 +190,17 @@ function muteUnmuteTrack(btn) {
 
     node.setAudio(operableDecodedAudioBuffer.toArray());
     node.connect(audioCtx.destination);
+
+    const { default: initializeWamHost } = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
+    const [hostGroupId] = await initializeWamHost(audioCtx);
+
+    const { default: WAM } = await import ("./plugins/testBern/index.js");
+    const instance = await WAM.createInstance(hostGroupId, audioCtx);
+    connectPlugin(node, instance._audioNode);
+
+    const pluginDomModel = await instance.createGui();
+    mountPlugin(pluginDomModel);
+
     // source.connect(node).connect(audioCtx.destination);
     connectPlugin(node, gainNode);
     node.parameters.get("playing").value = 0;
@@ -257,3 +274,33 @@ function muteUnmuteTrack(btn) {
         }
     };
 })();
+
+function dropHandler(ev) {
+    console.log('File(s) dropped');
+  
+    // Prevent default behavior (Prevent file from being opened)
+    ev.preventDefault();
+  
+    if (ev.dataTransfer.items) {
+      // Use DataTransferItemList interface to access the file(s)
+      for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+        // If dropped items aren't files, reject them
+        if (ev.dataTransfer.items[i].kind === 'file') {
+          var file = ev.dataTransfer.items[i].getAsFile();
+          console.log('... file[' + i + '].name = ' + file.name);
+        }
+      }
+    } else {
+      // Use DataTransfer interface to access the file(s)
+      for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+        console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+      }
+    }
+  }
+
+  function dragOverHandler(ev) {
+    console.log('File(s) in drop zone');
+  
+    // Prevent default behavior (Prevent file from being opened)
+    ev.preventDefault();
+  }
