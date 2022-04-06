@@ -120,6 +120,7 @@ class HeapAudioBuffer {
    * array of channel data.
    */
   getChannelData(channelIndex) {
+    // console.log(this._channelData);
     if (channelIndex >= this._channelCount) {
       return null;
     }
@@ -128,13 +129,13 @@ class HeapAudioBuffer {
         ? this._channelData : this._channelData[channelIndex];
   }
 
-  getChannelData2(c1, c2) {
-    if (c2 >= this._channelCount) {
-      return null;
-    }
+  setChannelData(input, channelIndex) {
+    this._channelData[channelIndex] = input[channelIndex];
+  }
 
-    return typeof c2 === 'undefined'
-        ? this._channelData : this._channelData[c1][c2];
+  setChannelOutputData(output, channelIndex) {
+    // let output =
+    output = this._channelData[channelIndex];
   }
 
   /**
