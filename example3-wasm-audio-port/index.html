@@ -11,6 +11,9 @@
     <link rel="stylesheet" type="text/css" href="./style/style.css" />
     <title>Audio Player TER</title>
     <!--        <script type="module"  src="processor.js"></script>-->
+    <script src="./src/js/bpf.js"></script>
+  
+
 </head>
 
 <body>
@@ -54,9 +57,28 @@
 
     <div class="plugin">
         <div id="mount"></div>
+
+        <div id="pluginInfoContainer">
+            <div id="pluginInfoDiv"></div>
+        </div>
+        <!-- this will be used for the plugin's automation -->
+        <div id="pluginAutomationContainer">
+            <div id="pluginParamSelectorContainer">
+                <select name="pluginParamSelector" id="pluginParamSelector" class="widget">
+                    <option value="-1" disabled selected>Add Automation...</option>
+                </select>
+                <label for="pluginAutomationLength">Duration (sec):</label>
+                <input name="pluginAutomationLength" id="pluginAutomationLength" type="number" class="widget" min="1" step="0.1" value="1" />
+                <input id="pluginAutomationApply" type="button" class="widget" value="Apply" />
+            </div>
+            <div id="pluginAutomationEditor">
+            </div>
+        </div>
+
     </div>
     
-    <script src="./index.js"></script>
+    <script src="./index.js" type="module"></script>
+    <!-- <script src="./src/js/automation.js"></script> -->
 </body>
 
 </html>

@@ -1,3 +1,8 @@
+
+// import { showPluginInfo , populateParamSelector } from './src/js/automation.js';
+import { drawBuffer , drawLine  , launched } from './src/js/drawers.js';
+
+
 class SimpleNode extends AudioWorkletNode {
     /**
      * @param {BaseAudioContext} context
@@ -42,7 +47,9 @@ const btnRestart = document.getElementById("restart");
 
 const mount = document.getElementById("mount");
 var zoom = 1;
-var x;
+export var paused = false;
+
+export var x;
 
 /** @type {HTMLInputElement} */
 // @ts-ignore
@@ -53,83 +60,22 @@ const volumeinput = document.getElementById("volume");
 //@ts-ignore
 const inputMute = document.getElementById("Mute");
 
+
 //@ts-ignore
-var launched;
-//@ts-ignore
-var paused = false;
+var currentPluginAudioNode;
 
 //music duration
 //@ts-ignore
-var dur = 0;
+export var dur = 0;
 
-function drawBuffer(canvas, buffer, color, width, height) {
-    var ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    canvas.width = width;
-    canvas.height = height;
-    if (color) {
-        ctx.fillStyle = color;
-    }
-    var data = buffer.getChannelData(0);
-    var step = Math.ceil(data.length / width);
-    var amp = height / 2;
-    for (var i = 0; i < width; i++) {
-        var min = 1.0;
-        var max = -1.0;
-        for (var j = 0; j < step; j++) {
-            var datum = data[i * step + j];
-            if (datum < min) min = datum;
-            if (datum > max) max = datum;
-        }
-        ctx.fillRect(i, (1 + min) * amp, 1, Math.max(1, (max - min) * amp));
-    }
-}
-
-// @ts-ignore
-function drawLine(canvas, decodedAudioBuffer) {
-    launched = true;
-    var ctx = canvas.getContext("2d");
-    x = 0;
-    // @ts-ignore
-    var y = 50;
-    // @ts-ignore
-    var width = 10;
-    // @ts-ignore
-    var height = 10;
-    let speed = 33;
-    let delta = 0.01; // the time spent in the function animate // empirical value i have to do it better
-
-    function animate() {
-        //speed Calculation for the line:
-        if (dur == 0) {
-            console.error("duration not defined for this sound.");
-        } else {
-            speed = (dur / (canvas.width / 2)) * 1000;
-        }
-        if (!paused) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "black";
-            ctx.beginPath();
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
-            ctx.stroke();
-            x += 2;
-        }
-        if (x <= canvas.width) {
-            setTimeout(animate, speed - delta);
-        }
-        if (x > canvas.width) {
-            launched = false;
-        }
-    }
-
-    animate();
-}
 
 const connectPlugin = (sourceNode, audioNode) => {
     sourceNode.connect(audioNode);
     audioNode.connect(audioCtx.destination);
+    
 };
+
+
 
 const mountPlugin = (domModel) => {
     mount.innerHTML = '';
@@ -150,6 +96,111 @@ function changeVol(vol) {
 function muteUnmuteTrack(btn) {
     console.log(btn);
 }
+
+/** @type {HTMLSelectElement} */ const pluginParamSelector = document.querySelector('#pluginParamSelector');
+/** @type {HTMLInputElement} */ const pluginAutomationLengthInput = document.querySelector('#pluginAutomationLength');
+/** @type {HTMLInputElement} */ const pluginAutomationApplyButton = document.querySelector('#pluginAutomationApply');
+/** @type {HTMLDivElement} */ const bpfContainer = document.querySelector('#pluginAutomationEditor');
+
+pluginParamSelector.addEventListener('input', async (e) => {
+	if (!currentPluginAudioNode) return;
+	const paramId = e.target.value;
+	if (paramId === '-1') return;
+	if (Array.from(bpfContainer.querySelectorAll('.pluginAutomationParamId')).find(/** @param {HTMLSpanElement} span */(span) => span.textContent === paramId)) return;
+	const div = document.createElement('div');
+	div.classList.add('pluginAutomation');
+	const span = document.createElement('span');
+	span.classList.add('pluginAutomationParamId');
+	span.textContent = paramId;
+	div.appendChild(span);
+	const bpf = document.createElement('webaudiomodules-host-bpf');
+	const info = await currentPluginAudioNode.getParameterInfo(paramId);
+	const { minValue, maxValue, defaultValue } = info[paramId];
+	bpf.setAttribute('min', minValue);
+	bpf.setAttribute('max', maxValue);
+	bpf.setAttribute('default', defaultValue);
+	div.appendChild(bpf);
+	bpfContainer.appendChild(div);
+	pluginParamSelector.selectedIndex = 0;
+});
+pluginAutomationLengthInput.addEventListener('input', (e) => {
+	const domain = +e.target.value;
+	if (!domain) return;
+	bpfContainer.querySelectorAll('webaudiomodules-host-bpf').forEach(/** @param {import("./src/js/bpf").default} bpf */(bpf) => {
+		bpf.setAttribute('domain', domain);
+	});
+});
+pluginAutomationApplyButton.addEventListener('click', () => {
+	if (!currentPluginAudioNode) return;
+	bpfContainer.querySelectorAll('.pluginAutomation').forEach(/** @param {HTMLDivElement} div */(div) => {
+		const paramId = div.querySelector('.pluginAutomationParamId').textContent;
+		/** @type {import("./src/js/bpf").default} */  
+        const bpf = div.querySelector('webaudiomodules-host-bpf');
+        console.log(bpf);
+		bpf.apply(currentPluginAudioNode, paramId);
+	});
+});
+
+
+/**
+ * Display plugin info
+ * @param {WebAudioModule} instance
+ * @param {HTMLElement} gui
+ */
+ const showPluginInfo = async (instance, gui) => {
+	/** @type {HTMLDivElement} */
+	const pluginInfoDiv = document.querySelector('#pluginInfoDiv');
+	const paramInfos = await instance.audioNode.getParameterInfo();
+	let guiWidth;
+	let guiHeight;
+	try {
+		guiWidth = gui.properties.dataWidth.value;
+		guiHeight = gui.properties.dataHeight.value;
+	} catch (err) {
+		guiWidth = 'undefined, (you should define get properties in Gui.js)';
+		guiHeight = 'undefined, (you should define get properties in Gui.js)';
+	}
+
+	let parameterList = '';
+
+	Object.entries(paramInfos).forEach(([key, value]) => {
+		parameterList += `<li><b>${key}</b> : ${JSON.stringify(value)}</li>`;
+	});
+
+	pluginInfoDiv.innerHTML = `
+	<li><b>instance.descriptor :</b> ${JSON.stringify(instance.descriptor)}</li>
+	<li><b>gui.properties.dataWidth.value</b> : ${guiWidth}</li>
+	<li><b>gui.properties.dataHeight.value</b> : ${guiHeight}</li>
+	<li><b>instance.audioNode.getParameterInfo() :</b>
+		<ul>
+		   ${parameterList}
+		</ul>
+	</li>
+	`;
+};
+
+
+/**
+ * @param {import('../api/src').WamNode} wamNode
+ */
+ const populateParamSelector = async (wamNode) => {
+	bpfContainer.innerHTML = '';
+	pluginParamSelector.innerHTML = '<option value="-1" disabled selected>Add Automation...</option>';
+	const info = await wamNode.getParameterInfo();
+	// eslint-disable-next-line
+	for (const paramId in info) {
+		const { minValue, maxValue, label } = info[paramId];
+		const option = new Option(`${paramId} (${label}): ${minValue} - ${maxValue}`, paramId);
+		pluginParamSelector.add(option);
+	}
+	pluginParamSelector.selectedIndex = 0;
+};
+
+
+
+
+
+
 
 (async () => {
     const { default: OperableAudioBuffer } = await import(
@@ -197,8 +248,15 @@ function muteUnmuteTrack(btn) {
     const { default: WAM } = await import ("./plugins/testBern/index.js");
     const instance = await WAM.createInstance(hostGroupId, audioCtx);
     connectPlugin(node, instance._audioNode);
+    currentPluginAudioNode = instance._audioNode;
+  
 
-    const pluginDomModel = await instance.createGui();
+    const pluginDomModel = await instance.createGui();  
+
+    // plugin info for automation
+    // showPluginInfo(instance, pluginDomModel);
+    populateParamSelector(instance.audioNode);
+
     mountPlugin(pluginDomModel);
 
     // source.connect(node).connect(audioCtx.destination);
@@ -297,6 +355,9 @@ function dropHandler(ev) {
       }
     }
   }
+
+
+
 
   function dragOverHandler(ev) {
     console.log('File(s) in drop zone');
