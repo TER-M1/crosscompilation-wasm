@@ -243,7 +243,7 @@ const populateParamSelector = async (wamNode) => {
     );
     const node = new SimpleNode(audioCtx);
     node.setAudio(operableDecodedAudioBuffer.toArray());
-    node.connect(node2).connect(audioCtx.destination);
+    node.connect(audioCtx.destination);
 
     const { default: initializeWamHost } = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
     const [hostGroupId] = await initializeWamHost(audioCtx);
