@@ -1,6 +1,7 @@
-
 // import { showPluginInfo , populateParamSelector } from './src/js/automation.js';
-import { drawBuffer , drawLine  , launched } from './src/js/drawers.js';
+import {LineDrawer, drawBuffer} from './src/js/drawers.js';
+// import WaveSurfer from "./lib/wavesurfer.js"
+
 
 
 class SimpleNode extends AudioWorkletNode {
@@ -72,7 +73,6 @@ export var dur = 0;
 const connectPlugin = (sourceNode, audioNode) => {
     sourceNode.connect(audioNode);
     audioNode.connect(audioCtx.destination);
-    
 };
 
 
@@ -103,42 +103,42 @@ function muteUnmuteTrack(btn) {
 /** @type {HTMLDivElement} */ const bpfContainer = document.querySelector('#pluginAutomationEditor');
 
 pluginParamSelector.addEventListener('input', async (e) => {
-	if (!currentPluginAudioNode) return;
-	const paramId = e.target.value;
-	if (paramId === '-1') return;
-	if (Array.from(bpfContainer.querySelectorAll('.pluginAutomationParamId')).find(/** @param {HTMLSpanElement} span */(span) => span.textContent === paramId)) return;
-	const div = document.createElement('div');
-	div.classList.add('pluginAutomation');
-	const span = document.createElement('span');
-	span.classList.add('pluginAutomationParamId');
-	span.textContent = paramId;
-	div.appendChild(span);
-	const bpf = document.createElement('webaudiomodules-host-bpf');
-	const info = await currentPluginAudioNode.getParameterInfo(paramId);
-	const { minValue, maxValue, defaultValue } = info[paramId];
-	bpf.setAttribute('min', minValue);
-	bpf.setAttribute('max', maxValue);
-	bpf.setAttribute('default', defaultValue);
-	div.appendChild(bpf);
-	bpfContainer.appendChild(div);
-	pluginParamSelector.selectedIndex = 0;
+    if (!currentPluginAudioNode) return;
+    const paramId = e.target.value;
+    if (paramId === '-1') return;
+    if (Array.from(bpfContainer.querySelectorAll('.pluginAutomationParamId')).find(/** @param {HTMLSpanElement} span */(span) => span.textContent === paramId)) return;
+    const div = document.createElement('div');
+    div.classList.add('pluginAutomation');
+    const span = document.createElement('span');
+    span.classList.add('pluginAutomationParamId');
+    span.textContent = paramId;
+    div.appendChild(span);
+    const bpf = document.createElement('webaudiomodules-host-bpf');
+    const info = await currentPluginAudioNode.getParameterInfo(paramId);
+    const { minValue, maxValue, defaultValue } = info[paramId];
+    bpf.setAttribute('min', minValue);
+    bpf.setAttribute('max', maxValue);
+    bpf.setAttribute('default', defaultValue);
+    div.appendChild(bpf);
+    bpfContainer.appendChild(div);
+    pluginParamSelector.selectedIndex = 0;
 });
 pluginAutomationLengthInput.addEventListener('input', (e) => {
-	const domain = +e.target.value;
-	if (!domain) return;
-	bpfContainer.querySelectorAll('webaudiomodules-host-bpf').forEach(/** @param {import("./src/js/bpf").default} bpf */(bpf) => {
-		bpf.setAttribute('domain', domain);
-	});
+    const domain = +e.target.value;
+    if (!domain) return;
+    bpfContainer.querySelectorAll('webaudiomodules-host-bpf').forEach(/** @param {import("./src/js/bpf").default} bpf */(bpf) => {
+        bpf.setAttribute('domain', domain);
+    });
 });
 pluginAutomationApplyButton.addEventListener('click', () => {
-	if (!currentPluginAudioNode) return;
-	bpfContainer.querySelectorAll('.pluginAutomation').forEach(/** @param {HTMLDivElement} div */(div) => {
-		const paramId = div.querySelector('.pluginAutomationParamId').textContent;
-		/** @type {import("./src/js/bpf").default} */  
+    if (!currentPluginAudioNode) return;
+    bpfContainer.querySelectorAll('.pluginAutomation').forEach(/** @param {HTMLDivElement} div */(div) => {
+        const paramId = div.querySelector('.pluginAutomationParamId').textContent;
+        /** @type {import("./src/js/bpf").default} */
         const bpf = div.querySelector('webaudiomodules-host-bpf');
         console.log(bpf);
-		bpf.apply(currentPluginAudioNode, paramId);
-	});
+        bpf.apply(currentPluginAudioNode, paramId);
+    });
 });
 
 
@@ -147,27 +147,27 @@ pluginAutomationApplyButton.addEventListener('click', () => {
  * @param {WebAudioModule} instance
  * @param {HTMLElement} gui
  */
- const showPluginInfo = async (instance, gui) => {
-	/** @type {HTMLDivElement} */
-	const pluginInfoDiv = document.querySelector('#pluginInfoDiv');
-	const paramInfos = await instance.audioNode.getParameterInfo();
-	let guiWidth;
-	let guiHeight;
-	try {
-		guiWidth = gui.properties.dataWidth.value;
-		guiHeight = gui.properties.dataHeight.value;
-	} catch (err) {
-		guiWidth = 'undefined, (you should define get properties in Gui.js)';
-		guiHeight = 'undefined, (you should define get properties in Gui.js)';
-	}
+const showPluginInfo = async (instance, gui) => {
+    /** @type {HTMLDivElement} */
+    const pluginInfoDiv = document.querySelector('#pluginInfoDiv');
+    const paramInfos = await instance.audioNode.getParameterInfo();
+    let guiWidth;
+    let guiHeight;
+    try {
+        guiWidth = gui.properties.dataWidth.value;
+        guiHeight = gui.properties.dataHeight.value;
+    } catch (err) {
+        guiWidth = 'undefined, (you should define get properties in Gui.js)';
+        guiHeight = 'undefined, (you should define get properties in Gui.js)';
+    }
 
-	let parameterList = '';
+    let parameterList = '';
 
-	Object.entries(paramInfos).forEach(([key, value]) => {
-		parameterList += `<li><b>${key}</b> : ${JSON.stringify(value)}</li>`;
-	});
+    Object.entries(paramInfos).forEach(([key, value]) => {
+        parameterList += `<li><b>${key}</b> : ${JSON.stringify(value)}</li>`;
+    });
 
-	pluginInfoDiv.innerHTML = `
+    pluginInfoDiv.innerHTML = `
 	<li><b>instance.descriptor :</b> ${JSON.stringify(instance.descriptor)}</li>
 	<li><b>gui.properties.dataWidth.value</b> : ${guiWidth}</li>
 	<li><b>gui.properties.dataHeight.value</b> : ${guiHeight}</li>
@@ -183,17 +183,17 @@ pluginAutomationApplyButton.addEventListener('click', () => {
 /**
  * @param {import('../api/src').WamNode} wamNode
  */
- const populateParamSelector = async (wamNode) => {
-	bpfContainer.innerHTML = '';
-	pluginParamSelector.innerHTML = '<option value="-1" disabled selected>Add Automation...</option>';
-	const info = await wamNode.getParameterInfo();
-	// eslint-disable-next-line
-	for (const paramId in info) {
-		const { minValue, maxValue, label } = info[paramId];
-		const option = new Option(`${paramId} (${label}): ${minValue} - ${maxValue}`, paramId);
-		pluginParamSelector.add(option);
-	}
-	pluginParamSelector.selectedIndex = 0;
+const populateParamSelector = async (wamNode) => {
+    bpfContainer.innerHTML = '';
+    pluginParamSelector.innerHTML = '<option value="-1" disabled selected>Add Automation...</option>';
+    const info = await wamNode.getParameterInfo();
+    // eslint-disable-next-line
+    for (const paramId in info) {
+        const { minValue, maxValue, label } = info[paramId];
+        const option = new Option(`${paramId} (${label}): ${minValue} - ${maxValue}`, paramId);
+        pluginParamSelector.add(option);
+    }
+    pluginParamSelector.selectedIndex = 0;
 };
 
 
@@ -202,25 +202,32 @@ pluginAutomationApplyButton.addEventListener('click', () => {
 
 
 
+
+// Create an instance
+
+
 (async () => {
     const { default: OperableAudioBuffer } = await import(
         "./src/js/operable-audio-buffer.js"
-    );
-
+        );
     let decodedAudioBuffer;
     let audioArrayBuffer;
 
     //   var audioCtx =
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
 
-    const response = await fetch(audioUrl);
+    let response = await fetch(audioUrl);
     audioArrayBuffer = await response.arrayBuffer();
     decodedAudioBuffer = await audioCtx.decodeAudioData(audioArrayBuffer);
 
-    dur = decodedAudioBuffer.duration;
-    console.log(dur);
+
+
     var canvas0 = document.getElementById("layer0");
     var canvas1 = document.getElementById("layer1");
+
+    let lineDrawer = new LineDrawer(canvas1);
+    lineDrawer.duration = decodedAudioBuffer.duration;
+
     // @ts-ignore // définition du canvas pour l'onde
     canvas0.height = 300;
     canvas0.width = 1000;
@@ -228,19 +235,15 @@ pluginAutomationApplyButton.addEventListener('click', () => {
     canvas1.height = 300;
     canvas1.width = 1000;
 
-    drawBuffer(canvas0, decodedAudioBuffer, "red", 1000, 300);
+    drawBuffer(canvas0, decodedAudioBuffer, "red", 1000, 300)
 
-    const operableDecodedAudioBuffer = Object.setPrototypeOf(
+    let operableDecodedAudioBuffer = Object.setPrototypeOf(
         decodedAudioBuffer,
         OperableAudioBuffer.prototype
     );
     const node = new SimpleNode(audioCtx);
-    //   const node = new SimpleNode(audioCtx);
-    // const source = audioCtx.createBufferSource();
-    // source.buffer = operableDecodedAudioBuffer;
-
     node.setAudio(operableDecodedAudioBuffer.toArray());
-    node.connect(audioCtx.destination);
+    node.connect(node2).connect(audioCtx.destination);
 
     const { default: initializeWamHost } = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
     const [hostGroupId] = await initializeWamHost(audioCtx);
@@ -249,9 +252,8 @@ pluginAutomationApplyButton.addEventListener('click', () => {
     const instance = await WAM.createInstance(hostGroupId, audioCtx);
     connectPlugin(node, instance._audioNode);
     currentPluginAudioNode = instance._audioNode;
-  
 
-    const pluginDomModel = await instance.createGui();  
+    const pluginDomModel = await instance.createGui();
 
     // plugin info for automation
     // showPluginInfo(instance, pluginDomModel);
@@ -276,6 +278,7 @@ pluginAutomationApplyButton.addEventListener('click', () => {
         zoom -= 0.1;
         zoom = 1000 * zoom <= 101 ? zoom + 0.1 : zoom;
         drawBuffer(canvas0, decodedAudioBuffer, "red", 1000 * zoom, 300);
+        // drawBuffer(canvas0, decodedAudioBuffer, "red", 1000 * zoom, 300);
         // @ts-ignore
         canvas1.width = 1000 * zoom;
     };
@@ -288,14 +291,14 @@ pluginAutomationApplyButton.addEventListener('click', () => {
         if (playing === 1) {
             node.parameters.get("playing").value = 0;
             btnStart.textContent = "Start";
-            paused = true;
+            lineDrawer.paused = true;
         } else {
-            if (!launched) {
-                drawLine(canvas1, decodedAudioBuffer);
+            if (!lineDrawer.launched) {
+                lineDrawer.drawLine(decodedAudioBuffer);
             }
             node.parameters.get("playing").value = 1;
             btnStart.textContent = "Stop";
-            paused = false;
+            lineDrawer.paused = false;
         }
     };
     btnTime.onclick = () => {
@@ -306,7 +309,7 @@ pluginAutomationApplyButton.addEventListener('click', () => {
     };
     btnRestart.onclick = () => {
         node.setPosition(0);
-        x = 0;
+        lineDrawer.x = 0;
         //@ts-ignore
         canvas1.getContext("2d").clearRect(0, 0, canvas1.width, canvas1.height);
     };
@@ -335,33 +338,33 @@ pluginAutomationApplyButton.addEventListener('click', () => {
 
 function dropHandler(ev) {
     console.log('File(s) dropped');
-  
+
     // Prevent default behavior (Prevent file from being opened)
     ev.preventDefault();
-  
+
     if (ev.dataTransfer.items) {
-      // Use DataTransferItemList interface to access the file(s)
-      for (var i = 0; i < ev.dataTransfer.items.length; i++) {
-        // If dropped items aren't files, reject them
-        if (ev.dataTransfer.items[i].kind === 'file') {
-          var file = ev.dataTransfer.items[i].getAsFile();
-          console.log('... file[' + i + '].name = ' + file.name);
+        // Use DataTransferItemList interface to access the file(s)
+        for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+            // If dropped items aren't files, reject them
+            if (ev.dataTransfer.items[i].kind === 'file') {
+                var file = ev.dataTransfer.items[i].getAsFile();
+                console.log('... file[' + i + '].name = ' + file.name);
+            }
         }
-      }
     } else {
-      // Use DataTransfer interface to access the file(s)
-      for (var i = 0; i < ev.dataTransfer.files.length; i++) {
-        console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
-      }
+        // Use DataTransfer interface to access the file(s)
+        for (var i = 0; i < ev.dataTransfer.files.length; i++) {
+            console.log('... file[' + i + '].name = ' + ev.dataTransfer.files[i].name);
+        }
     }
-  }
+}
 
 
 
 
-  function dragOverHandler(ev) {
+function dragOverHandler(ev) {
     console.log('File(s) in drop zone');
-  
+
     // Prevent default behavior (Prevent file from being opened)
     ev.preventDefault();
-  }
+}
