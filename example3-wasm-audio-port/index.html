@@ -12,7 +12,7 @@
     <title>Audio Player TER</title>
     <!--        <script type="module"  src="processor.js"></script>-->
     <script src="./src/js/bpf.js"></script>
-  
+    <script src="./index.js" type="module"></script>
 
 </head>
 
@@ -43,13 +43,12 @@
         </button>
         
     </div>
-    <div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);">
+    <div id="drop_zone">
         <p>Drag one or more files to this Drop Zone ...</p>
     </div>
     <!-- <br/> -->
 
     <!-- <br/> -->
-    
     <div class="waveform" id="waveform">
         <canvas id="layer0"></canvas>
         <canvas id="layer1"></canvas>
@@ -77,7 +76,6 @@
 
     </div>
     
-    <script src="./index.js" type="module"></script>
     <!-- <script src="./src/js/automation.js"></script> -->
 </body>
 
