@@ -1,27 +1,10 @@
 // import { showPluginInfo , populateParamSelector } from './src/js/automation.js';
 import {LineDrawer, drawBuffer} from './src/js/drawers.js';
 // import WaveSurfer from "./lib/wavesurfer.js"
+import {MainAudio, AudioTrack, SimpleNode} from "./src/js/audio_loader.js";
 
 
 
-class SimpleNode extends AudioWorkletNode {
-    /**
-     * @param {BaseAudioContext} context
-     */
-    constructor(context) {
-        super(context, "simple-processor");
-    }
-    /** @param {number} position set playhead in seconds */
-    setPosition(position) {
-        this.port.postMessage({ position });
-    }
-    /**
-     * @param {Float32Array[][]} audio
-     */
-    setAudio(audio) {
-        this.port.postMessage({ audio });
-    }
-}
 
 //@ts-check
 
@@ -230,26 +213,29 @@ dropZone.addEventListener("dragover", (ev) => {
 });
 
 (async () => {
-    const { default: OperableAudioBuffer } = await import(
-        "./src/js/operable-audio-buffer.js"
-        );
-    let decodedAudioBuffer;
-    let audioArrayBuffer;
-
-    //   var audioCtx =
+    // const { default: OperableAudioBuffer } = await import(
+    //     "./src/js/operable-audio-buffer.js"
+    //     );
+    // let decodedAudioBuffer;
+    // let audioArrayBuffer;
+    //
+    // //   var audioCtx =
+    // await audioCtx.audioWorklet.addModule("./src/js/processor.js");
+    //
+    // let response = await fetch(audioUrl);
+    // audioArrayBuffer = await response.arrayBuffer();
+    // decodedAudioBuffer = await audioCtx.decodeAudioData(audioArrayBuffer);
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
-
-    let response = await fetch(audioUrl);
-    audioArrayBuffer = await response.arrayBuffer();
-    decodedAudioBuffer = await audioCtx.decodeAudioData(audioArrayBuffer);
-
-
+    let node = new SimpleNode(audioCtx);
+    let audioTracks = new MainAudio(audioCtx);
+    await audioTracks.addTrack(new AudioTrack(audioCtx, node, audioUrl));
+    await audioTracks.addTrack(new AudioTrack(audioCtx, new SimpleNode(audioCtx), "./song/Flute_-_L._Club.mp3"));
 
     var canvas0 = document.getElementById("layer0");
     var canvas1 = document.getElementById("layer1");
 
     let lineDrawer = new LineDrawer(canvas1);
-    lineDrawer.duration = decodedAudioBuffer.duration;
+    lineDrawer.duration = audioTracks.tracks[0].duration;
 
     // @ts-ignore // définition du canvas pour l'onde
     canvas0.height = 300;
@@ -258,36 +244,37 @@ dropZone.addEventListener("dragover", (ev) => {
     canvas1.height = 300;
     canvas1.width = 1000;
 
-    drawBuffer(canvas0, decodedAudioBuffer, "red", 1000, 300)
+    drawBuffer(canvas0, audioTracks.tracks[0].decodedAudioBuffer, "red", 1000, 300)
+    // drawBuffer(canvas0, audioTracks.tracks[1].decodedAudioBuffer, "red", 1000, 300)
 
-    let operableDecodedAudioBuffer = Object.setPrototypeOf(
-        decodedAudioBuffer,
-        OperableAudioBuffer.prototype
-    );
-    const node = new SimpleNode(audioCtx);
-    node.setAudio(operableDecodedAudioBuffer.toArray());
-    node.connect(audioCtx.destination);
+    // let operableDecodedAudioBuffer = Object.setPrototypeOf(
+    //     decodedAudioBuffer,
+    //     OperableAudioBuffer.prototype
+    // );
+    // const node = new SimpleNode(audioCtx);
+    // node.setAudio(operableDecodedAudioBuffer.toArray());
+    // node.connect(audioCtx.destination);
 
     const { default: initializeWamHost } = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
     const [hostGroupId] = await initializeWamHost(audioCtx);
 
     const { default: WAM } = await import ("./plugins/testBern/index.js");
     const instance = await WAM.createInstance(hostGroupId, audioCtx);
-    connectPlugin(node, instance._audioNode);
+    connectPlugin(audioTracks.node, instance._audioNode);
     currentPluginAudioNode = instance._audioNode;
 
     const pluginDomModel = await instance.createGui();
 
     // plugin info for automation
     // showPluginInfo(instance, pluginDomModel);
-    populateParamSelector(instance.audioNode);
+    await populateParamSelector(instance.audioNode);
 
     mountPlugin(pluginDomModel);
 
     // source.connect(node).connect(audioCtx.destination);
-    connectPlugin(node, gainNode);
-    node.parameters.get("playing").value = 0;
-    node.parameters.get("loop").value = 1;
+    connectPlugin(audioTracks.node, gainNode);
+    audioTracks.node.parameters.get("playing").value = 0;
+    audioTracks.node.parameters.get("loop").value = 1;
     //EVENT LISTENER
     zoomIn.onclick = () => {
         // event listener for the zoom button
@@ -310,16 +297,16 @@ dropZone.addEventListener("dragover", (ev) => {
             audioCtx.resume();
             // source.start();
         }
-        const playing = node.parameters.get("playing").value;
+        const playing = audioTracks.node.parameters.get("playing").value;
         if (playing === 1) {
-            node.parameters.get("playing").value = 0;
+            audioTracks.node.parameters.get("playing").value = 0;
             btnStart.textContent = "Start";
             lineDrawer.paused = true;
         } else {
             if (!lineDrawer.launched) {
-                lineDrawer.drawLine(decodedAudioBuffer);
+                lineDrawer.drawLine(audioTracks.tracks[0].decodedAudioBuffer);
             }
-            node.parameters.get("playing").value = 1;
+            audioTracks.node.parameters.get("playing").value = 1;
             btnStart.textContent = "Stop";
             lineDrawer.paused = false;
         }
@@ -331,19 +318,19 @@ dropZone.addEventListener("dragover", (ev) => {
         // console.log(node)
     };
     btnRestart.onclick = () => {
-        node.setPosition(0);
+        audioTracks.node.setPosition(0);
         lineDrawer.x = 0;
         //@ts-ignore
         canvas1.getContext("2d").clearRect(0, 0, canvas1.width, canvas1.height);
     };
     inputLoop.checked = true;
     inputLoop.onchange = () => {
-        const loop = node.parameters.get("loop").value;
+        const loop = audioTracks.node.parameters.get("loop").value;
         if (loop === 1) {
-            node.parameters.get("loop").value = 0;
+            audioTracks.node.parameters.get("loop").value = 0;
             inputLoop.checked = false;
         } else {
-            node.parameters.get("loop").value = 1;
+            audioTracks.node.parameters.get("loop").value = 1;
             inputLoop.checked = true;
         }
     };
