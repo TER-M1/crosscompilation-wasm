@@ -19,15 +19,6 @@ export class SimpleNode extends AudioWorkletNode {
     }
 }
 
-export class MyAudioNode extends AudioNode {
-    constructor() {
-        super();
-    }
-
-    connect(destinationNode, output, input) {
-        return super.connect(destinationNode, output, input);
-    }
-}
 
 export class MainAudio {
     /**
@@ -36,45 +27,29 @@ export class MainAudio {
      */
     tracks = [];
 
-    constructor(audioCtx) {
+    constructor(audioCtx, node) {
         this.audioCtx = audioCtx;
-        this.node = undefined;
+        this.node = node;
         // this.processorPath = processorPath;
         // this.audioCtx.audioWorklet.addModule(this.processorPath);
         // this.audioCtx.audioWorklet.addModule("./src/js/processor.js");
     }
 
     async addTrack(track) {
-        if (this.node === undefined) {
-            this.node = track.node;
-        } else {
-            // track.node.connect(this.audioCtx.destination);
-
-            this.node.connect(track.node);
-        }
-        track.node.connect(this.audioCtx.destination);
+        // if (this.node === undefined) {
+        //     this.node = track.node;
+        // }
+        // else {
+        //     this.node.connect(track.node);
+        // }
+        // this.node.connect(this.audioCtx.destination)
+        this.node.connect(track.node);
         await track.load();
+
+
         this.tracks.push(track);
 
     }
-
-    // async connectPlugin(wamHost, wamPath) {
-    //     const { default: initializeWamHost } = await import(wamHost);
-    //     const [hostGroupId] = await initializeWamHost(audioCtx);
-    //
-    //     const { default: WAM } = await import (wamPath);
-    //     const instance = await WAM.createInstance(hostGroupId, audioCtx);
-    //     connectPlugin(node, instance._audioNode);
-    //     currentPluginAudioNode = instance._audioNode;
-    //
-    //     const pluginDomModel = await instance.createGui();
-    //
-    //     // plugin info for automation
-    //     // showPluginInfo(instance, pluginDomModel);
-    //     populateParamSelector(instance.audioNode);
-    //
-    //     mountPlugin(pluginDomModel);
-    // }
 }
 
 
@@ -100,6 +75,7 @@ export class AudioTrack {
             OperableAudioBuffer.prototype
         );
         this.node.setAudio(this.operableDecodedAudioBuffer.toArray());
+        this.node.connect(this.audioCtx.destination);
     }
 
 

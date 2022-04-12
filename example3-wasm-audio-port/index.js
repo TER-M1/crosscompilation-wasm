@@ -6,6 +6,7 @@ import {MainAudio, AudioTrack, SimpleNode} from "./src/js/audio_loader.js";
 
 
 
+
 //@ts-check
 
 // const audioUrl = "https://wasabi.i3s.unice.fr/WebAudioPluginBank/BasketCaseGreendayriffDI.mp3";
@@ -213,29 +214,19 @@ dropZone.addEventListener("dragover", (ev) => {
 });
 
 (async () => {
-    // const { default: OperableAudioBuffer } = await import(
-    //     "./src/js/operable-audio-buffer.js"
-    //     );
-    // let decodedAudioBuffer;
-    // let audioArrayBuffer;
-    //
-    // //   var audioCtx =
-    // await audioCtx.audioWorklet.addModule("./src/js/processor.js");
-    //
-    // let response = await fetch(audioUrl);
-    // audioArrayBuffer = await response.arrayBuffer();
-    // decodedAudioBuffer = await audioCtx.decodeAudioData(audioArrayBuffer);
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
     let node = new SimpleNode(audioCtx);
-    let audioTracks = new MainAudio(audioCtx);
-    await audioTracks.addTrack(new AudioTrack(audioCtx, node, audioUrl));
-    await audioTracks.addTrack(new AudioTrack(audioCtx, new SimpleNode(audioCtx), "./song/Flute_-_L._Club.mp3"));
-
+    let mainAudio = new MainAudio(audioCtx, node);
+    await mainAudio.addTrack(new AudioTrack(audioCtx, new SimpleNode(audioCtx), audioUrl));
+    await mainAudio.addTrack(
+        new AudioTrack(audioCtx, new SimpleNode(audioCtx), "./song/Flute_-_L._Club.mp3")
+    );
+    console.log(mainAudio.tracks);
     var canvas0 = document.getElementById("layer0");
     var canvas1 = document.getElementById("layer1");
 
     let lineDrawer = new LineDrawer(canvas1);
-    lineDrawer.duration = audioTracks.tracks[0].duration;
+    lineDrawer.duration = mainAudio.tracks[0].duration;
 
     // @ts-ignore // définition du canvas pour l'onde
     canvas0.height = 300;
@@ -244,8 +235,8 @@ dropZone.addEventListener("dragover", (ev) => {
     canvas1.height = 300;
     canvas1.width = 1000;
 
-    drawBuffer(canvas0, audioTracks.tracks[0].decodedAudioBuffer, "red", 1000, 300)
-    // drawBuffer(canvas0, audioTracks.tracks[1].decodedAudioBuffer, "red", 1000, 300)
+    drawBuffer(canvas0, mainAudio.tracks[0].decodedAudioBuffer, "red", 1000, 300)
+    // drawBuffer(canvas0, mainAudio.tracks[1].decodedAudioBuffer, "red", 1000, 300)
 
     // let operableDecodedAudioBuffer = Object.setPrototypeOf(
     //     decodedAudioBuffer,
@@ -260,7 +251,7 @@ dropZone.addEventListener("dragover", (ev) => {
 
     const { default: WAM } = await import ("./plugins/testBern/index.js");
     const instance = await WAM.createInstance(hostGroupId, audioCtx);
-    connectPlugin(audioTracks.node, instance._audioNode);
+    connectPlugin(mainAudio.node, instance._audioNode);
     currentPluginAudioNode = instance._audioNode;
 
     const pluginDomModel = await instance.createGui();
@@ -272,9 +263,9 @@ dropZone.addEventListener("dragover", (ev) => {
     mountPlugin(pluginDomModel);
 
     // source.connect(node).connect(audioCtx.destination);
-    connectPlugin(audioTracks.node, gainNode);
-    audioTracks.node.parameters.get("playing").value = 0;
-    audioTracks.node.parameters.get("loop").value = 1;
+    connectPlugin(mainAudio.node, gainNode);
+    mainAudio.node.parameters.get("playing").value = 0;
+    mainAudio.node.parameters.get("loop").value = 1;
     //EVENT LISTENER
     zoomIn.onclick = () => {
         // event listener for the zoom button
@@ -297,16 +288,16 @@ dropZone.addEventListener("dragover", (ev) => {
             audioCtx.resume();
             // source.start();
         }
-        const playing = audioTracks.node.parameters.get("playing").value;
+        const playing = mainAudio.node.parameters.get("playing").value;
         if (playing === 1) {
-            audioTracks.node.parameters.get("playing").value = 0;
+            mainAudio.node.parameters.get("playing").value = 0;
             btnStart.textContent = "Start";
             lineDrawer.paused = true;
         } else {
             if (!lineDrawer.launched) {
-                lineDrawer.drawLine(audioTracks.tracks[0].decodedAudioBuffer);
+                lineDrawer.drawLine(mainAudio.tracks[0].decodedAudioBuffer);
             }
-            audioTracks.node.parameters.get("playing").value = 1;
+            mainAudio.node.parameters.get("playing").value = 1;
             btnStart.textContent = "Stop";
             lineDrawer.paused = false;
         }
@@ -318,19 +309,19 @@ dropZone.addEventListener("dragover", (ev) => {
         // console.log(node)
     };
     btnRestart.onclick = () => {
-        audioTracks.node.setPosition(0);
+        mainAudio.node.setPosition(0);
         lineDrawer.x = 0;
         //@ts-ignore
         canvas1.getContext("2d").clearRect(0, 0, canvas1.width, canvas1.height);
     };
     inputLoop.checked = true;
     inputLoop.onchange = () => {
-        const loop = audioTracks.node.parameters.get("loop").value;
+        const loop = mainAudio.node.parameters.get("loop").value;
         if (loop === 1) {
-            audioTracks.node.parameters.get("loop").value = 0;
+            mainAudio.node.parameters.get("loop").value = 0;
             inputLoop.checked = false;
         } else {
-            audioTracks.node.parameters.get("loop").value = 1;
+            mainAudio.node.parameters.get("loop").value = 1;
             inputLoop.checked = true;
         }
     };
