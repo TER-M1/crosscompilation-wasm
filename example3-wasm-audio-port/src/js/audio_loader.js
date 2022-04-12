@@ -54,8 +54,6 @@ export class MainAudio {
         }
         track.node.connect(this.audioCtx.destination);
         await track.load();
-
-        track.node.connect(this.audioCtx.destination);
         this.tracks.push(track);
 
     }
