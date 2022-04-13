@@ -19,7 +19,7 @@ class SimpleProcessor extends AudioWorkletProcessor {
                 name: "loop",
                 minValue: 0,
                 maxValue: 1,
-                defaultValue: 0,
+                defaultValue: 1,
             },
         ];
     }
@@ -29,7 +29,7 @@ class SimpleProcessor extends AudioWorkletProcessor {
         this.audio = null;
         /** @type {number} */
         this.playhead = 0;
-        /** @param {MessageEvent<{ audio?: Float32Array[]; position?: number }>} e */
+        /** @param {MessageEvent<{ audio?: Float32Array[]; position?: number;}>} e */
         this.port.onmessage = (e) => {
             if (e.data.audio) {
                 this.audio = e.data.audio;
