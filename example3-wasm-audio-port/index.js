@@ -29,12 +29,16 @@ const connectPlugin = (sourceNode, audioNode) => {
     audioNode.connect(audioCtx.destination);
 };
 
-var canvas0 = document.getElementById("track0");
+var canvas = [];
+// var canvas0 = document.getElementById("track0");
+for (let i = 0; i < 12; i++) {
+    canvas.push(document.getElementById(`track${i}`));
+}
 
 //@ts-ignore
 var currentPluginAudioNode;
 
-const mountPlugin = (domModel) => {
+const mountPlugin = (mount, domModel) => {
     mount.innerHTML = '';
     mount.appendChild(domModel);
 };
@@ -86,16 +90,12 @@ function muteUnmuteTrack(btn) {
         new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/12_LeadVox.mp3"));
 
     console.log(mainAudio.tracks);
-    var canvas0 = document.getElementById("layer0");
-    var canvas1 = document.getElementById("layer1");
-
-    // let lineDrawer = new LineDrawer(canvas1);
-    // lineDrawer.duration = mainAudio.tracks[0].duration;
 
     // @ts-ignore // définition du canvas pour l'onde
 
-
-    drawBuffer(canvas0, mainAudio.tracks[0].decodedAudioBuffer, "#4d5ed1", 2000, 99)
+    for (let i = 0; i < canvas.length;i++) {
+        drawBuffer(canvas[i], mainAudio.tracks[i].decodedAudioBuffer, "#4d5ed1", 2000, 99);
+    }
     // drawBuffer(canvas0, mainAudio.tracks[1].decodedAudioBuffer, "red", 1000, 300)
 
     // let operableDecodedAudioBuffer = Object.setPrototypeOf(
@@ -109,40 +109,34 @@ function muteUnmuteTrack(btn) {
     const { default: initializeWamHost } = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
     const [hostGroupId] = await initializeWamHost(audioCtx);
 
-    const { default: WAM } = await import ("./plugins/testBern/index.js");
-    const instance = await WAM.createInstance(hostGroupId, audioCtx);
-    connectPlugin(mainAudio.node, instance._audioNode);
+    var { default: WAM } = await import ("https://mainline.i3s.unice.fr/wam2/packages/GuitarAmpSim60s/index.js");
+    var instance = await WAM.createInstance(hostGroupId, audioCtx);
+    connectPlugin(mainAudio.tracks[0].audioWorkletNode, instance._audioNode);
     currentPluginAudioNode = instance._audioNode;
 
-    const pluginDomModel = await instance.createGui();
+    var pluginDomModel = await instance.createGui();
 
+    mountPlugin(document.querySelector("#mount1"), pluginDomModel);
+
+
+
+    var { default: WAM } = await import ("https://mainline.i3s.unice.fr/wam2/packages/BigMuff/index.js");
+    var instance = await WAM.createInstance(hostGroupId, audioCtx);
+    connectPlugin(mainAudio.tracks[0].audioWorkletNode, instance._audioNode);
+    currentPluginAudioNode = instance._audioNode;
+
+    var pluginDomModel = await instance.createGui();
+
+    mountPlugin(document.querySelector("#mount2"), pluginDomModel);
     // plugin info for automation
     // showPluginInfo(instance, pluginDomModel);
     // await populateParamSelector(instance._audioNode);
 
-    mountPlugin(pluginDomModel);
 
     // source.connect(node).connect(audioCtx.destination);
-    connectPlugin(mainAudio.node, gainNode);
-    mainAudio.node.parameters.get("playing").value = 0;
-    mainAudio.node.parameters.get("loop").value = 1;
+    connectPlugin(mainAudio.tracks[0].audioWorkletNode, mainAudio.masterVolumeNode);
+
     //EVENT LISTENER
-    zoomIn.onclick = () => {
-        // event listener for the zoom button
-        zoom += 0.1;
-        drawBuffer(canvas0, decodedAudioBuffer, "red", 1000 * zoom, 300);
-
-        canvas1.width = 1000 * zoom;
-    };
-    zoomOut.onclick = () => {
-        // event listener for the zoom button
-        zoom -= 0.1;
-        zoom = 1000 * zoom <= 101 ? zoom + 0.1 : zoom;
-        drawBuffer(canvas0, decodedAudioBuffer, "red", 1000 * zoom, 300);
-        // drawBuffer(canvas0, decodedAudioBuffer, "red", 1000 * zoom, 300);
-
-        canvas1.width = 1000 * zoom;
-    };
     btnStart.onclick = () => {
         if (audioCtx.state === "suspended") {
             audioCtx.resume();
@@ -153,31 +147,27 @@ function muteUnmuteTrack(btn) {
             const playing = track.audioWorkletNode.parameters.get("playing").value;
             if (playing === 1) {
                 track.audioWorkletNode.parameters.get("playing").value = 0;
-                btnStart.textContent = "Start";
                 // lineDrawer.paused = true;
             } else {
                 // if (!lineDrawer.launched) {
                 //     lineDrawer.drawLine(track.audioWorkletNode.decodedAudioBuffer);
                 // }
                 track.audioWorkletNode.parameters.get("playing").value = 1;
-                btnStart.textContent = "Stop";
                 // lineDrawer.paused = false;
             }
         });
 
     };
-    btnTime.onclick = () => {
-        // console.log(audioCtx.getOutputTimestamp());
-        // console.log(audioCtx.getOutputTimestamp().contextTime);
-        // console.log(audioCtx.currentTime);
-        // console.log(node)
-    };
+    // btnTime.onclick = () => {
+    //     // console.log(audioCtx.getOutputTimestamp());
+    //     // console.log(audioCtx.getOutputTimestamp().contextTime);
+    //     // console.log(audioCtx.currentTime);
+    //     // console.log(node)
+    // };
     btnRestart.onclick = () => {
         mainAudio.tracks.forEach((track) => {
             track.audioWorkletNode.setPosition(0);
-            lineDrawer.x = 0;
             //@ts-ignore
-            canvas1.getContext("2d").clearRect(0, 0, canvas1.width, canvas1.height);
 
         })
     };
@@ -199,13 +189,13 @@ function muteUnmuteTrack(btn) {
 
 
         // @ts-ignore
-    volspan.onchange = (e) => {
-        if (inputMute.checked) {
-            mainAudio.masterVolumeNode.gain.value = -1;
-        } else {
-            changeVol(mainAudio.masterVolumeNode, volumeinput);
-        }
-    }
+    // volspan.onchange = (e) => {
+    //     if (inputMute.checked) {
+    //         mainAudio.masterVolumeNode.gain.value = -1;
+    //     } else {
+    //         changeVol(mainAudio.masterVolumeNode, volumeinput);
+    //     }
+    // }
     inputMute.onclick = () => {
 
         if (inputMute.checked) {
