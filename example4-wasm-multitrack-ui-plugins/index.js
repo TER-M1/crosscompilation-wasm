@@ -5,7 +5,9 @@ import {MainAudio, AudioTrack, SimpleAudioWorkletNode} from "./src/js/audio_load
 var audioUrl = "./song/BasketCaseGreendayriffDI.mp3";
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
+if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+}
 /** @type {HTMLButtonElement} */
 
 const btnStart = document.getElementById("btn-start");
@@ -23,7 +25,7 @@ const inputLoop = document.getElementById("loop");
 const volumeinput = document.getElementById("volume");
 //@ts-ignore
 const inputMute = document.getElementById("mute");
-
+var timer = document.querySelector(".timer");
 const connectPlugin = (sourceNode, audioNode) => {
     sourceNode.connect(audioNode);
     audioNode.connect(audioCtx.destination);
@@ -56,7 +58,7 @@ function muteUnmuteTrack(btn) {
     console.log("mute")
 }
 
-/** @type {HTMLSelectElement} */ const pluginParamSelector = document.querySelector('#pluginParamSelector');
+/** @type {HTMLSelectElement} */ const pluginParamSelector = document.querySelector('#pluginParamSelectorDrop');
 /** @type {HTMLInputElement} */ const pluginAutomationLengthInput = document.querySelector('#pluginAutomationLength');
 /** @type {HTMLInputElement} */ const pluginAutomationApplyButton = document.querySelector('#pluginAutomationApply');
 /** @type {HTMLDivElement} */ const bpfContainer = document.querySelector('#pluginAutomationEditor');
@@ -105,13 +107,16 @@ pluginAutomationApplyButton.addEventListener('click', () => {
  */
  const populateParamSelector = async (wamNode) => {
     bpfContainer.innerHTML = '';
-    pluginParamSelector.innerHTML = '<option value="-1" disabled selected>Add Automation...</option>';
+    // pluginParamSelector.innerHTML = '<option value="-1" disabled selected>Add Automation...</option>';
     const info = await wamNode.getParameterInfo();
     // eslint-disable-next-line
     for (const paramId in info) {
         const { minValue, maxValue, label } = info[paramId];
         const option = new Option(`${paramId} (${label}): ${minValue} - ${maxValue}`, paramId);
-        pluginParamSelector.add(option);
+        const div = document.createElement('div');
+        div.innerHTML = `${paramId} (${label}): ${minValue} - ${maxValue}`;
+        // pluginParamSelector.add(option);
+        pluginParamSelector.appendChild(div)
     }
     pluginParamSelector.selectedIndex = 0;
 };
@@ -119,7 +124,22 @@ pluginAutomationApplyButton.addEventListener('click', () => {
 
 
 
-
+function updateAudioTimer(mainAudio) {
+    // var days = Math.floor(mainAudio.tracks[0].duration / 24);
+    var hours = Math.floor(mainAudio.tracks[0].duration / 3600);
+    var mins = Math.floor(mainAudio.tracks[0].duration / 60);
+    var secs = Math.floor(mainAudio.tracks[0].duration % 60);
+    if (secs < 10) {
+        secs = '0' + String(secs);
+    }
+    if (mins < 10) {
+        mins = '0' + String(mins);
+    }
+    if (hours < 10) {
+        hours = '0' + String(hours);
+    }
+    timer.innerHTML = hours + ':' + mins + ':' + secs;
+}
 
 (async () => {
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
@@ -151,11 +171,12 @@ pluginAutomationApplyButton.addEventListener('click', () => {
         new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/12_LeadVox.mp3"));
 
     console.log(mainAudio.tracks);
+    updateAudioTimer(mainAudio);
 
     // @ts-ignore // définition du canvas pour l'onde
 
     for (let i = 0; i < canvas.length;i++) {
-        drawBuffer(canvas[i], mainAudio.tracks[i].decodedAudioBuffer, "#4d5ed1", 2000, 99);
+        drawBuffer(canvas[i], mainAudio.tracks[i].decodedAudioBuffer, "#" + Math.floor(Math.random()*16777215).toString(16), 2000, 99);
     }
     // drawBuffer(canvas0, mainAudio.tracks[1].decodedAudioBuffer, "red", 1000, 300)
 
@@ -193,18 +214,18 @@ pluginAutomationApplyButton.addEventListener('click', () => {
     // showPluginInfo(instance, pluginDomModel);
     // await populateParamSelector(instance._audioNode);
     // await populateParamSelector(instance._audioNode);
- await populateParamSelector(instance._audioNode);
+    await populateParamSelector(instance._audioNode);
     // source.connect(node).connect(audioCtx.destination);
     connectPlugin(mainAudio.tracks[0].audioWorkletNode, mainAudio.masterVolumeNode);
 
     //EVENT LISTENER
     btnStart.onclick = () => {
-        if (audioCtx.state === "suspended") {
-            audioCtx.resume();
-            // source.start();
-        }
+
 
         mainAudio.tracks.forEach((track) => {
+            if (audioCtx.state === "suspended") {
+                audioCtx.resume();
+            }
             const playing = track.audioWorkletNode.parameters.get("playing").value;
             if (playing === 1) {
                 track.audioWorkletNode.parameters.get("playing").value = 0;
@@ -214,7 +235,6 @@ pluginAutomationApplyButton.addEventListener('click', () => {
                 //     lineDrawer.drawLine(track.audioWorkletNode.decodedAudioBuffer);
                 // }
                 track.audioWorkletNode.parameters.get("playing").value = 1;
-                // lineDrawer.paused = false;
             }
         });
 
@@ -225,14 +245,14 @@ pluginAutomationApplyButton.addEventListener('click', () => {
     //     // console.log(audioCtx.currentTime);
     //     // console.log(node)
     // };
-  /*   btnRestart.onclick = () => {
+    
+   btnRestart.onclick = () => {
         mainAudio.tracks.forEach((track) => {
             track.audioWorkletNode.setPosition(0);
             //@ts-ignore
 
         })
-    }; */
-    inputLoop.checked = true;
+    };
     inputLoop.onchange = () => {
         mainAudio.tracks.forEach((track) => {
             const loop = track.audioWorkletNode.parameters.get("loop").value;
