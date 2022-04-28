@@ -254,7 +254,7 @@ i.icon {
 .add-plugin:hover {
     background-color: #151718;
 }
-
-/* .ui.dropdown .menu {
+/* hj'ai un proiblème avec la dropdown ça ne veut pas s'afficher quand je clique du coup je l'ouvre comme ça pour coder */
+.ui.dropdown .menu {
     display: block;
-} */
+}

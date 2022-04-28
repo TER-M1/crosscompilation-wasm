@@ -31,6 +31,11 @@ const connectPlugin = (sourceNode, audioNode) => {
     audioNode.connect(audioCtx.destination);
 };
 
+
+const automat = document.getElementById("automat");
+
+
+
 var canvas = [];
 // var canvas0 = document.getElementById("track0");
 for (let i = 0; i < 12; i++) {
@@ -107,14 +112,38 @@ pluginAutomationApplyButton.addEventListener('click', () => {
  */
  const populateParamSelector = async (wamNode) => {
     bpfContainer.innerHTML = '';
-    // pluginParamSelector.innerHTML = '<option value="-1" disabled selected>Add Automation...</option>';
+    pluginParamSelector.innerHTML = '';
     const info = await wamNode.getParameterInfo();
     // eslint-disable-next-line
     for (const paramId in info) {
-        const { minValue, maxValue, label } = info[paramId];
+        const { minValue, maxValue,label } = info[paramId];
         const option = new Option(`${paramId} (${label}): ${minValue} - ${maxValue}`, paramId);
         const div = document.createElement('div');
         div.innerHTML = `${paramId} (${label}): ${minValue} - ${maxValue}`;
+        div.addEventListener('click', async (e) => {
+            console.log("hello")
+            console.log(label)
+            if (!currentPluginAudioNode) return;
+            const paramId = e.target.value;
+            if (paramId === '-1') return;
+            if (Array.from(bpfContainer.querySelectorAll('.pluginAutomationParamId')).find(/** @param {HTMLSpanElement} span */(span) => span.textContent === paramId)) return;
+            const div2 = document.createElement('div');
+            div2.classList.add('pluginAutomation');
+            const span = document.createElement('span');
+            span.classList.add('pluginAutomationParamId');
+            span.textContent = paramId;
+            div2.appendChild(span);
+            const bpf = document.createElement('webaudiomodules-host-bpf');
+            console.log(bpf)
+            bpf.setAttribute('min', minValue);
+            bpf.setAttribute('max', maxValue);
+            let defaultValue = (maxValue - minValue) / 2; 
+            bpf.setAttribute('default', defaultValue);
+            div2.appendChild(bpf);
+            bpfContainer.appendChild(div2);
+            pluginParamSelector.selectedIndex = 0;
+            console.log("done");
+        });
         // pluginParamSelector.add(option);
         pluginParamSelector.appendChild(div)
     }
@@ -202,7 +231,9 @@ function updateAudioTimer(mainAudio) {
    
 
 
-  /*   var { default: WAM } = await import ("https://mainline.i3s.unice.fr/wam2/packages/BigMuff/index.js");
+  /*   
+    var { default: WAM } = await import ("https://michael-marynowicz.github.io/TER/pedalboard/index.js");
+  var { default: WAM } = await import ("https://mainline.i3s.unice.fr/wam2/packages/BigMuff/index.js");
     var instance = await WAM.createInstance(hostGroupId, audioCtx);
     connectPlugin(mainAudio.tracks[0].audioWorkletNode, instance._audioNode);
     currentPluginAudioNode = instance._audioNode;
@@ -214,13 +245,17 @@ function updateAudioTimer(mainAudio) {
     // showPluginInfo(instance, pluginDomModel);
     // await populateParamSelector(instance._audioNode);
     // await populateParamSelector(instance._audioNode);
-    await populateParamSelector(instance._audioNode);
+    
     // source.connect(node).connect(audioCtx.destination);
     connectPlugin(mainAudio.tracks[0].audioWorkletNode, mainAudio.masterVolumeNode);
-
+    // await populateParamSelector(instance._audioNode);
+    automat.onclick = ()=> {
+        populateParamSelector(instance._audioNode);
+    }
+   
     //EVENT LISTENER
     btnStart.onclick = () => {
-
+        
 
         mainAudio.tracks.forEach((track) => {
             if (audioCtx.state === "suspended") {
@@ -239,13 +274,7 @@ function updateAudioTimer(mainAudio) {
         });
 
     };
-    // btnTime.onclick = () => {
-    //     // console.log(audioCtx.getOutputTimestamp());
-    //     // console.log(audioCtx.getOutputTimestamp().contextTime);
-    //     // console.log(audioCtx.currentTime);
-    //     // console.log(node)
-    // };
-    
+
    btnRestart.onclick = () => {
         mainAudio.tracks.forEach((track) => {
             track.audioWorkletNode.setPosition(0);
