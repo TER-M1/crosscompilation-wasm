@@ -64,7 +64,7 @@ var timer = document.querySelector(".timer");
 /** @type {HTMLInputElement} */ const pluginAutomationLengthInput = document.querySelector('#pluginAutomationLength');
 /** @type {HTMLInputElement} */ const pluginAutomationApplyButton = document.querySelector('#pluginAutomationApply');
 /** @type {HTMLDivElement} */ const bpfContainer = document.querySelector('#pluginAutomationEditor');
-/**@type {HTMLButtonElement} */ const refreshParams = document.querySelector('#refreshParams');
+
 
 pluginParamSelector.addEventListener('input', async (e) => {
     if (!currentPluginAudioNode) return;
@@ -116,10 +116,6 @@ const populateParamSelector = async (wamNode) => {
     }
     pluginParamSelector.selectedIndex = 0;
 };
-
-
-
-
 
 function updateAudioTimer(mainAudio) {
     // var days = Math.floor(mainAudio.tracks[0].duration / 24);
@@ -188,17 +184,6 @@ function updateAudioTimer(mainAudio) {
     const { default: initializeWamHost } = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
     const [hostGroupId] = await initializeWamHost(audioCtx);
 
-    /* var { default: WAM } = await import ("https://mainline.i3s.unice.fr/wam2/packages/BigMuff/index.js");
-    var instance = await WAM.createInstance(hostGroupId, audioCtx);
-    connectPlugin(mainAudio.tracks[0].audioWorkletNode, instance._audioNode);
-    currentPluginAudioNode = instance._audioNode;
-
-    var pluginDomModel = await instance.createGui();
-
-    mountPlugin(document.querySelector("#mount1"), pluginDomModel);
-
-
- */
     var { default: WAM } = await import ("https://michael-marynowicz.github.io/TER/pedalboard/index.js");
     var instance = await WAM.createInstance(hostGroupId, audioCtx);
     connectPlugin(mainAudio.tracks[0].audioWorkletNode, instance._audioNode);
@@ -207,20 +192,18 @@ function updateAudioTimer(mainAudio) {
     var pluginDomModel = await instance.createGui();
 
     mountPlugin(document.querySelector("#mount2"), pluginDomModel);
-    // plugin info for automation
-    // showPluginInfo(instance, pluginDomModel);
+
     await populateParamSelector(instance._audioNode);
-    refreshParams.onclick = () => {
+
+    pluginParamSelector.onclick = () => {
         populateParamSelector(instance._audioNode);
-    }
+    };
 
     // source.connect(node).connect(audioCtx.destination);
     connectPlugin(mainAudio.tracks[0].audioWorkletNode, mainAudio.masterVolumeNode);
 
     //EVENT LISTENER
     btnStart.onclick = () => {
-
-
         mainAudio.tracks.forEach((track) => {
             if (audioCtx.state === "suspended") {
                 audioCtx.resume();
@@ -238,20 +221,8 @@ function updateAudioTimer(mainAudio) {
         });
 
     };
-    // btnTime.onclick = () => {
-    //     // console.log(audioCtx.getOutputTimestamp());
-    //     // console.log(audioCtx.getOutputTimestamp().contextTime);
-    //     // console.log(audioCtx.currentTime);
-    //     // console.log(node)
-    // };
-    btnRestart.onclick = () => {
-        mainAudio.tracks.forEach((track) => {
-            track.audioWorkletNode.setPosition(0);
-            //@ts-ignore
-
-        })
-    };
-    inputLoop.onchange = () => {
+    inputLoop.onclick = () => {
+        console.log("loop pressed")
         mainAudio.tracks.forEach((track) => {
             const loop = track.audioWorkletNode.parameters.get("loop").value;
             if (loop === 1) {
@@ -266,22 +237,41 @@ function updateAudioTimer(mainAudio) {
     };
     btnStart.hidden = false;
 
-
-        // @ts-ignore
-    // volspan.onchange = (e) => {
-    //     if (inputMute.checked) {
-    //         mainAudio.masterVolumeNode.gain.value = -1;
-    //     } else {
-    //         changeVol(mainAudio.masterVolumeNode, volumeinput);
-    //     }
-    // }
+    var val = 50
+    $('.master').slider({
+        start  : 50,
+        value: 50,
+        range  : 'max',
+        min    : 0,
+        max    : 100,
+        smooth: true,
+        onMove: function(value) {
+            console.log('master volume at ' + value)
+            val = value / 100;
+            mainAudio.tracks.forEach((track) => {
+                track.gainOutNode.value = val; 
+                });
+            mainAudio.masterVolumeNode.gain.value = val ;
+        }
+        });
+    let mute = false;
     inputMute.onclick = () => {
-
-        if (inputMute.checked) {
-            mainAudio.masterVolumeNode.gain.value = -1;
+        
+        if (!mute) {
+            console.log("mute");
+            mainAudio.tracks.forEach((track) => {
+            track.gainOutNode.value = 0; 
+            });
+            mainAudio.masterVolumeNode.gain.value = 0 ;
+            mute = true;
         }
         else {
-            changeVol(mainAudio.masterVolumeNode, volumeinput);
+            console.log("unmute");
+            mainAudio.masterVolumeNode.gain.value = val ;
+            mainAudio.tracks.forEach((track) => {
+                track.gainOutNode.value = val; 
+                });
+            mute = false;
         }
     };
 })();
