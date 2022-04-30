@@ -287,8 +287,6 @@ function updateAudioTimer(mainAudio) {
 
     for(var i = 0 ; i < trackElements.length ; i++){
         console.log(trackElements[i]);
-        trackElements[i]
-
     }
 
     
