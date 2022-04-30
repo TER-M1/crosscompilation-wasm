@@ -1,4 +1,5 @@
 import OperableAudioBuffer from './operable-audio-buffer.js'
+import {drawBuffer} from "./drawers.js";
 
 export class SimpleAudioWorkletNode extends AudioWorkletNode {
     /**
@@ -28,17 +29,20 @@ export class MainAudio {
      * @type {[AudioTrack]}
      */
     tracks = [];
-
-    constructor(audioCtx) {
+    constructor(audioCtx, canvas=[]) {
         this.audioCtx = audioCtx;
+        this.canvas = canvas;
+        this.maxGlobalTimer = 0;
         this.masterVolumeNode = audioCtx.createGain();
         this.masterVolumeNode.connect(this.audioCtx.destination);
     }
 
     async addTrack(track) {
         await track.load();
+        this.maxGlobalTimer = Math.max(track.duration, this.maxGlobalTimer)
         track.gainOutNode.connect(this.masterVolumeNode);
         this.tracks.push(track);
+        drawBuffer(this.canvas[this.tracks.length - 1], track.decodedAudioBuffer, "#" + Math.floor(Math.random()*16777215).toString(16), 2000, 99);
     }
 }
 

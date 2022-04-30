@@ -48,8 +48,7 @@ const mountPlugin = (mount, domModel) => {
 function changeVol(gainNode, vol) {
     if (vol.value === 0) {
         gainNode.gain.value = -1;
-    }
-    else if (!inputMute.checked) {
+    } else if (!inputMute.checked) {
         gainNode.gain.value = vol.value * 0.000001;
     }
 }
@@ -58,7 +57,7 @@ function muteUnmuteTrack(btn) {
     console.log("mute")
 }
 
-var timer = document.querySelector(".timer");
+var timerDiv = document.querySelector(".timer");
 
 /** @type {HTMLSelectElement} */ const pluginParamSelector = document.querySelector('#pluginParamSelector');
 /** @type {HTMLInputElement} */ const pluginAutomationLengthInput = document.querySelector('#pluginAutomationLength');
@@ -79,7 +78,7 @@ pluginParamSelector.addEventListener('input', async (e) => {
     div.appendChild(span);
     const bpf = document.createElement('webaudiomodules-host-bpf');
     const info = await currentPluginAudioNode.getParameterInfo(paramId);
-    const { minValue, maxValue, defaultValue } = info[paramId];
+    const {minValue, maxValue, defaultValue} = info[paramId];
     bpf.setAttribute('min', minValue);
     bpf.setAttribute('max', maxValue);
     bpf.setAttribute('default', defaultValue);
@@ -110,18 +109,21 @@ const populateParamSelector = async (wamNode) => {
     const info = await wamNode.getParameterInfo();
     // eslint-disable-next-line
     for (const paramId in info) {
-        const { minValue, maxValue, label } = info[paramId];
+        const {minValue, maxValue, label} = info[paramId];
         const option = new Option(`${paramId} (${label}): ${minValue} - ${maxValue}`, paramId);
         pluginParamSelector.add(option);
     }
     pluginParamSelector.selectedIndex = 0;
 };
 
+/**
+ *
+ * @param{MainAudio} mainAudio
+ */
 function updateAudioTimer(mainAudio) {
-    // var days = Math.floor(mainAudio.tracks[0].duration / 24);
-    var hours = Math.floor(mainAudio.tracks[0].duration / 3600);
-    var mins = Math.floor(mainAudio.tracks[0].duration / 60);
-    var secs = Math.floor(mainAudio.tracks[0].duration % 60);
+    var hours = Math.floor(mainAudio.maxGlobalTimer / 3600);
+    var mins = Math.floor(mainAudio.maxGlobalTimer / 60);
+    var secs = Math.floor(mainAudio.maxGlobalTimer % 60);
     if (secs < 10) {
         secs = '0' + String(secs);
     }
@@ -131,13 +133,13 @@ function updateAudioTimer(mainAudio) {
     if (hours < 10) {
         hours = '0' + String(hours);
     }
-    timer.innerHTML = hours + ':' + mins + ':' + secs;
+    timerDiv.innerHTML = `${hours}:${mins}:${secs}`;
 }
 
 (async () => {
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
     // let node = new SimpleNode(audioCtx);
-    let mainAudio = new MainAudio(audioCtx);
+    let mainAudio = new MainAudio(audioCtx, canvas);
     await mainAudio.addTrack(
         new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/01_Kick.mp3"));
     await mainAudio.addTrack(
@@ -164,13 +166,14 @@ function updateAudioTimer(mainAudio) {
         new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/12_LeadVox.mp3"));
 
     console.log(mainAudio.tracks);
+    console.log(mainAudio.maxGlobalTimer);
     updateAudioTimer(mainAudio);
 
     // @ts-ignore // définition du canvas pour l'onde
 
-    for (let i = 0; i < canvas.length;i++) {
-        drawBuffer(canvas[i], mainAudio.tracks[i].decodedAudioBuffer, "#" + Math.floor(Math.random()*16777215).toString(16), 2000, 99);
-    }
+    // for (let i = 0; i < canvas.length;i++) {
+    //     drawBuffer(canvas[i], mainAudio.tracks[i].decodedAudioBuffer, "#" + Math.floor(Math.random()*16777215).toString(16), 2000, 99);
+    // }
     // drawBuffer(canvas0, mainAudio.tracks[1].decodedAudioBuffer, "red", 1000, 300)
 
     // let operableDecodedAudioBuffer = Object.setPrototypeOf(
@@ -181,10 +184,10 @@ function updateAudioTimer(mainAudio) {
     // node.setAudio(operableDecodedAudioBuffer.toArray());
     // node.connect(audioCtx.destination);
 
-    const { default: initializeWamHost } = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
+    const {default: initializeWamHost} = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
     const [hostGroupId] = await initializeWamHost(audioCtx);
 
-    var { default: WAM } = await import ("https://michael-marynowicz.github.io/TER/pedalboard/index.js");
+    var {default: WAM} = await import ("https://michael-marynowicz.github.io/TER/pedalboard/index.js");
     var instance = await WAM.createInstance(hostGroupId, audioCtx);
     connectPlugin(mainAudio.tracks[0].audioWorkletNode, instance._audioNode);
     currentPluginAudioNode = instance._audioNode;
@@ -201,7 +204,7 @@ function updateAudioTimer(mainAudio) {
 
     // source.connect(node).connect(audioCtx.destination);
     connectPlugin(mainAudio.tracks[0].audioWorkletNode, mainAudio.masterVolumeNode);
-
+    var intervalTimerId = undefined;
     //EVENT LISTENER
     btnStart.onclick = () => {
         mainAudio.tracks.forEach((track) => {
@@ -211,15 +214,23 @@ function updateAudioTimer(mainAudio) {
             const playing = track.audioWorkletNode.parameters.get("playing").value;
             if (playing === 1) {
                 track.audioWorkletNode.parameters.get("playing").value = 0;
+                console.log(intervalTimerId);
+                if (intervalTimerId !== undefined) {
+                    clearInterval(intervalTimerId);
+                    intervalTimerId = undefined;
+                    // console.log(intervalTimerId);
+                }
                 // lineDrawer.paused = true;
             } else {
-                // if (!lineDrawer.launched) {
-                //     lineDrawer.drawLine(track.audioWorkletNode.decodedAudioBuffer);
-                // }
                 track.audioWorkletNode.parameters.get("playing").value = 1;
+                if (intervalTimerId === undefined) {
+                    intervalTimerId = setInterval(() => {
+                        updateAudioTimer(mainAudio);
+                        mainAudio.maxGlobalTimer -= 1.;
+                    }, 1000);
+                }
             }
         });
-
     };
     inputLoop.onclick = () => {
         console.log("loop pressed")
@@ -239,22 +250,22 @@ function updateAudioTimer(mainAudio) {
 
 
     $('.master').slider({
-        start  : 50,
+        start: 50,
         value: 50,
-        range  : 'max',
-        min    : 0,
-        max    : 100,
+        range: 'max',
+        min: 0,
+        max: 100,
         smooth: true,
-        onMove: function(value) {
+        onMove: function (value) {
             let val;
             console.log('master volume at ' + value)
             val = value / 100;
-            mainAudio.tracks.forEach((track) => {
-                track.gainOutNode.value = val; 
-                });
-            mainAudio.masterVolumeNode.gain.value = val ;
+            // mainAudio.tracks.forEach((track) => {
+            //     track.gainOutNode.value = val;
+            //     });
+            mainAudio.masterVolumeNode.gain.value = val;
         }
-        });
+    });
     
     let mute = false;
 
@@ -292,18 +303,18 @@ function updateAudioTimer(mainAudio) {
 
         if (!mute) {
             console.log("mute");
-            mainAudio.tracks.forEach((track) => {
-            track.gainOutNode.value = 0; 
-            });
-            mainAudio.masterVolumeNode.gain.value = 0 ;
+            // mainAudio.tracks.forEach((track) => {
+            // track.gainOutNode.value = 0;
+            // });
+            // mainAudio.masterVolumeNode.gain.value = -1;
+            mainAudio.masterVolumeNode.gain.value = 0;
             mute = true;
-        }
-        else {
+        } else {
             console.log("unmute");
-            mainAudio.masterVolumeNode.gain.value = val ;
-            mainAudio.tracks.forEach((track) => {
-                track.gainOutNode.value = val; 
-                });
+            mainAudio.masterVolumeNode.gain.value = val;
+            // mainAudio.tracks.forEach((track) => {
+            //     track.gainOutNode.value = val;
+            //     });
             mute = false;
         }
     };
