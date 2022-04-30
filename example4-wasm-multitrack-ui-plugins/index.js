@@ -237,7 +237,7 @@ function updateAudioTimer(mainAudio) {
     };
     btnStart.hidden = false;
 
-    var val = 50
+
     $('.master').slider({
         start  : 50,
         value: 50,
@@ -246,6 +246,7 @@ function updateAudioTimer(mainAudio) {
         max    : 100,
         smooth: true,
         onMove: function(value) {
+            let val;
             console.log('master volume at ' + value)
             val = value / 100;
             mainAudio.tracks.forEach((track) => {
@@ -254,9 +255,41 @@ function updateAudioTimer(mainAudio) {
             mainAudio.masterVolumeNode.gain.value = val ;
         }
         });
+    
     let mute = false;
+
+    
+    var trackElements = $(".track-volume");
+    // trackElements.slider({
+    //     start  : 50,
+    //     value: 50,
+    //     range  : 'max',
+    //     min    : 0,
+    //     max    : 100,
+    //     smooth: true,
+    //     onMove: function(value) {
+    //         console.log("HellowOrld")
+    //     }
+    // });
+    let t = document.getElementsByClassName("track sound");
+    console.log(t);
+
+    for(var i = 0 ; i < trackElements.length ; i++){
+        console.log(trackElements[i]);
+        trackElements[i]
+
+    }
+
+    
     inputMute.onclick = () => {
-        
+        // trackElements.forEach((trackElem) => {
+        //     console.log(trackElem);
+        // });
+        // console.log(trackElements)
+        // console.log(trackElements.length);
+      
+
+
         if (!mute) {
             console.log("mute");
             mainAudio.tracks.forEach((track) => {
