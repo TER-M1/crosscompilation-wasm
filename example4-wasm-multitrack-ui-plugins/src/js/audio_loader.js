@@ -162,6 +162,11 @@ export class MainAudio {
         track.gainOutNode.connect(this.masterVolumeNode);
         this.tracks.push(track);
         drawBuffer(this.canvas[this.tracks.length - 1], track.decodedAudioBuffer, "#" + Math.floor(Math.random()*16777215).toString(16), 2000, 99);
+        let trackEl = document.createElement("track-element",
+            {arguments: [track, this.tracks.length]});
+        console.log(trackEl);
+        this.tracksDiv.appendChild(trackEl);
+
     }
 }
 
