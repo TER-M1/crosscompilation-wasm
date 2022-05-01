@@ -1,6 +1,124 @@
 import OperableAudioBuffer from './operable-audio-buffer.js'
 import {drawBuffer} from "./drawers.js";
 
+
+const template = document.createElement("template");
+template.innerHTML = /*html*/`
+<div class="track-element">
+<div class="track-element-tools">
+    <div class="track-name">
+        
+        <i class="times red icon"></i>
+    </div>
+    <div class="track-volume">
+        <i class="volume down icon"></i>
+        <div class="ui inverted grey slider track sound small "></div>
+        <i class="volume up icon"></i>
+
+    </div>
+    <div class="balance">
+        <i class="left-icon">L</i>
+        <div class="ui inverted grey slider track balance small"></div>
+        <i class="right-icon">R</i>
+
+    </div>
+
+    <div class="track-controls">
+        <a class="item tool">
+            <i class="mute-icon">M</i>
+        </a>
+        <a class="item tool">
+            <i class="mute-icon">S</i>
+        </a>
+        <a class="item tool">
+            <i class="project diagram icon"></i>
+        </a>
+    </div>
+</div>
+<div class="track-element-color"></div>
+</div>
+
+  `;
+
+
+
+class TrackElement extends HTMLElement {
+    /**
+     *
+     * @param {AudioTrack} track
+     * @param {String} id
+     */
+    constructor(track, id){
+        super();
+        // console.log(track);
+        this.attachShadow({ mode: "open" });
+        this.id = id;
+        this.track = track;
+    }
+
+
+
+    connectedCallback(){
+        console.log("element defined");
+
+        // this.shadowRoot.appendChild(template.content.cloneNode(true));
+        this.shadowRoot.innerHTML = template.innerHTML;
+        // this.innerHTML = template.innerHTML;
+        this.fixTrackNumber();
+        this.defineListeners();
+        this.defineRemoveTrack();
+    }
+
+    fixTrackNumber(){
+        const name = this.shadowRoot.querySelector(".track-name");
+        name.id = this.id;
+        name.innerHTML = "Track " + this.id;
+    }
+    defineListeners() {
+        let slider_volume = this.shadowRoot.querySelector(".track.sound");
+        slider_volume.slider({
+            start: 50,
+            value: 50,
+            range: 'max',
+            min: 0,
+            max: 100,
+            smooth: true,
+            onMove: function (value) {
+                let val;
+                console.log("track n" + this.id + " val at " + value);
+                val = value / 100;
+                this.track.gainOutNode.gain.value = val;
+            }
+        });
+        let slider_balance = this.shadowRoot.querySelector(".track.balance");
+        slider_balance.slider({
+            start  : 0,
+            value: 0,
+            range  : 'max',
+            min    : -1,
+            max    : 1,
+            smooth: true,
+            onMove: function(value) {
+                this.track.pannerNode.positionX.value = value;
+                console.log('onmove' + value);
+            }
+        });
+
+
+    }
+    defineRemoveTrack(){
+        let removeButton = this.shadowRoot.querySelector(".red.icon");
+        removeButton.onclick = () => {
+            console.log("should remove the track");
+        }
+    }
+}
+
+customElements.define(
+    "track-element",
+    TrackElement
+);
+
 export class SimpleAudioWorkletNode extends AudioWorkletNode {
     /**
      * @param {BaseAudioContext} context
@@ -29,6 +147,7 @@ export class MainAudio {
      * @type {[AudioTrack]}
      */
     tracks = [];
+    tracksDiv = document.querySelector(".tools-tracks");
     constructor(audioCtx, canvas=[]) {
         this.audioCtx = audioCtx;
         this.canvas = canvas;
