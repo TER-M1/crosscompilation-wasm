@@ -4,6 +4,12 @@ import {drawBuffer} from "./drawers.js";
 
 const template = document.createElement("template");
 template.innerHTML = /*html*/`
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+<script src="../../lib/semantic.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.8/dist/components/icon.min.css">
+<link rel="stylesheet" href="../../lib/semantic.min.css" type="text/css">
+
 <style>
 
 .tracks {
@@ -172,21 +178,19 @@ i.icon {
   `;
 
 
-
 class TrackElement extends HTMLElement {
     /**
      *
      * @param {AudioTrack} track
      * @param {String} id
      */
-    constructor(){
+    constructor() {
         super();
-        this.attachShadow({ mode: "open" });
+        this.attachShadow({mode: "open"});
     }
 
 
-
-    connectedCallback(){
+    connectedCallback() {
         this.track = this.attributes.track.value;
         this.id = this.attributes.id.value;
         console.log(this.track);
@@ -205,11 +209,12 @@ class TrackElement extends HTMLElement {
 
     }
 
-    fixTrackNumber(){
+    fixTrackNumber() {
         const name = this.shadowRoot.querySelector(".track-name");
         name.id = this.id;
         name.innerHTML = "Track " + this.id;
     }
+
     defineListeners() {
         // let slider_volume = this.shadowRoot.querySelector(".track.sound");
         // console.log(slider_volume);
@@ -229,13 +234,13 @@ class TrackElement extends HTMLElement {
         });
         // let slider_balance = this.shadowRoot.querySelector(".track.balance");
         $(".track.balance").slider({
-            start  : 0,
+            start: 0,
             value: 0,
-            range  : 'max',
-            min    : -1,
-            max    : 1,
+            range: 'max',
+            min: -1,
+            max: 1,
             smooth: true,
-            onMove: function(value) {
+            onMove: function (value) {
                 this.track.pannerNode.positionX.value = value;
                 console.log('onmove' + value);
             }
@@ -243,7 +248,8 @@ class TrackElement extends HTMLElement {
 
 
     }
-    defineRemoveTrack(){
+
+    defineRemoveTrack() {
         // let removeButton = this.shadowRoot.querySelector(".red.icon");
         $(".red.icon").onclick = () => {
             console.log("should remove the track");
@@ -285,7 +291,8 @@ export class MainAudio {
      */
     tracks = [];
     tracksDiv = document.querySelector(".tools-tracks");
-    constructor(audioCtx, canvas=[]) {
+
+    constructor(audioCtx, canvas = []) {
         this.audioCtx = audioCtx;
         this.canvas = canvas;
         this.maxGlobalTimer = 0;
@@ -298,7 +305,7 @@ export class MainAudio {
         this.maxGlobalTimer = Math.max(track.duration, this.maxGlobalTimer)
         track.gainOutNode.connect(this.masterVolumeNode);
         this.tracks.push(track);
-        drawBuffer(this.canvas[this.tracks.length - 1], track.decodedAudioBuffer, "#" + Math.floor(Math.random()*16777215).toString(16), 2000, 99);
+        drawBuffer(this.canvas[this.tracks.length - 1], track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16), 2000, 99);
         let trackEl = document.createElement("track-element");
         trackEl.setAttribute("track", track);
         trackEl.setAttribute("id", this.tracks.length);
