@@ -1,5 +1,4 @@
-import {LineDrawer, drawBuffer} from './src/js/drawers.js';
-import {MainAudio, AudioTrack, SimpleAudioWorkletNode} from "./src/js/audio_loader.js";
+import {MainAudio, AudioTrack, SimpleAudioWorkletNode, loadMultiTrackDir} from "./src/js/audio_loader.js";
 
 
 var audioUrl = "./song/BasketCaseGreendayriffDI.mp3";
@@ -140,31 +139,21 @@ function updateAudioTimer(mainAudio) {
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
     // let node = new SimpleNode(audioCtx);
     let mainAudio = new MainAudio(audioCtx, canvas);
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/01_Kick.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/02_Snare.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/03_Overheads.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/04_Room.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/05_Tom1.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/06_Tom2.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/07_Tom3.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/08_BassDI.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/09_BassAmp.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/10_Gtr1.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/11_Gtr2.mp3"));
-    await mainAudio.addTrack(
-        new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/12_LeadVox.mp3"));
 
+    let asyncAddTrack = [
+        mainAudio.addTrack(
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/bass.wav")),
+        mainAudio.addTrack(
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/drums.wav")),
+        mainAudio.addTrack(
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/other.wav")),
+        mainAudio.addTrack(
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/vocals.wav"))
+    ]
+    let res = await Promise.all(
+        asyncAddTrack
+    )
+    console.log(res);
     console.log(mainAudio.tracks);
     console.log(mainAudio.maxGlobalTimer);
     updateAudioTimer(mainAudio);
@@ -267,21 +256,20 @@ function updateAudioTimer(mainAudio) {
         }
     });
     console.log(masterV)
-    
+
     let mute = false;
 
-    
+
     var trackElements = $(".track.sound");
 
     let t = document.getElementsByClassName("track sound");
-    
+
     inputMute.onclick = () => {
         // trackElements.forEach((trackElem) => {
         //     console.log(trackElem);
         // });
         // console.log(trackElements)
         // console.log(trackElements.length);
-      
 
 
         if (!mute) {
