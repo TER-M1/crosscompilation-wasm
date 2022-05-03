@@ -4,7 +4,7 @@ import {drawBuffer} from "./drawers.js";
 
 const template = document.createElement("template");
 template.innerHTML = /*html*/`
-<div class="track-element">
+
 <div class="track-element-tools">
     <div class="track-name">
         
@@ -36,7 +36,7 @@ template.innerHTML = /*html*/`
     </div>
 </div>
 <div class="track-element-color"></div>
-</div>
+
 
   `;
 
@@ -48,17 +48,18 @@ class TrackElement extends HTMLElement {
      * @param {AudioTrack} track
      * @param {String} id
      */
-    constructor(track, id){
+    constructor(){
         super();
-        // console.log(track);
         this.attachShadow({ mode: "open" });
-        this.id = id;
-        this.track = track;
     }
 
 
 
     connectedCallback(){
+        this.track = this.attributes.track.value;
+        this.id = this.attributes.id.value;
+        console.log(this.track);
+
         console.log("element defined");
 
         // this.shadowRoot.appendChild(template.content.cloneNode(true));
@@ -69,14 +70,19 @@ class TrackElement extends HTMLElement {
         this.defineRemoveTrack();
     }
 
+    disconnectedCallback() {
+
+    }
+
     fixTrackNumber(){
         const name = this.shadowRoot.querySelector(".track-name");
         name.id = this.id;
         name.innerHTML = "Track " + this.id;
     }
     defineListeners() {
-        let slider_volume = this.shadowRoot.querySelector(".track.sound");
-        slider_volume.slider({
+        // let slider_volume = this.shadowRoot.querySelector(".track.sound");
+        // console.log(slider_volume);
+        $(".track.sound").slider({
             start: 50,
             value: 50,
             range: 'max',
@@ -90,8 +96,8 @@ class TrackElement extends HTMLElement {
                 this.track.gainOutNode.gain.value = val;
             }
         });
-        let slider_balance = this.shadowRoot.querySelector(".track.balance");
-        slider_balance.slider({
+        // let slider_balance = this.shadowRoot.querySelector(".track.balance");
+        $(".track.balance").slider({
             start  : 0,
             value: 0,
             range  : 'max',
@@ -107,8 +113,8 @@ class TrackElement extends HTMLElement {
 
     }
     defineRemoveTrack(){
-        let removeButton = this.shadowRoot.querySelector(".red.icon");
-        removeButton.onclick = () => {
+        // let removeButton = this.shadowRoot.querySelector(".red.icon");
+        $(".red.icon").onclick = () => {
             console.log("should remove the track");
         }
     }
@@ -162,8 +168,9 @@ export class MainAudio {
         track.gainOutNode.connect(this.masterVolumeNode);
         this.tracks.push(track);
         drawBuffer(this.canvas[this.tracks.length - 1], track.decodedAudioBuffer, "#" + Math.floor(Math.random()*16777215).toString(16), 2000, 99);
-        let trackEl = document.createElement("track-element",
-            {arguments: [track, this.tracks.length]});
+        let trackEl = document.createElement("track-element");
+        trackEl.setAttribute("track", track);
+        trackEl.setAttribute("id", this.tracks.length);
         console.log(trackEl);
         this.tracksDiv.appendChild(trackEl);
 

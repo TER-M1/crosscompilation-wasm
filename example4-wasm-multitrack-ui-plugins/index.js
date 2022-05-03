@@ -247,6 +247,7 @@ function updateAudioTimer(mainAudio) {
 
     };
     btnStart.hidden = false;
+    var val;
 
 
     $('.master').slider({
@@ -257,7 +258,6 @@ function updateAudioTimer(mainAudio) {
         max: 100,
         smooth: true,
         onMove: function (value) {
-            let val;
             console.log('master volume at ' + value)
             val = value / 100;
             // mainAudio.tracks.forEach((track) => {
@@ -270,25 +270,9 @@ function updateAudioTimer(mainAudio) {
     let mute = false;
 
     
-    var trackElements = $(".track-volume");
-    // trackElements.slider({
-    //     start  : 50,
-    //     value: 50,
-    //     range  : 'max',
-    //     min    : 0,
-    //     max    : 100,
-    //     smooth: true,
-    //     onMove: function(value) {
-    //         console.log("HellowOrld")
-    //     }
-    // });
+    var trackElements = $(".track.sound");
+
     let t = document.getElementsByClassName("track sound");
-    console.log(t);
-
-    for(var i = 0 ; i < trackElements.length ; i++){
-        console.log(trackElements[i]);
-    }
-
     
     inputMute.onclick = () => {
         // trackElements.forEach((trackElem) => {
