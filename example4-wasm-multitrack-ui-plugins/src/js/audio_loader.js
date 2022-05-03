@@ -4,6 +4,137 @@ import {drawBuffer} from "./drawers.js";
 
 const template = document.createElement("template");
 template.innerHTML = /*html*/`
+<style>
+
+.tracks {
+    margin-top: 1.9em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    height: 100%;
+    background-color: #1C1E21;
+}
+
+.tools-tracks {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    background-color: #1C1E21;
+    /*border: 1px solid black;*/
+    /*border-top: none;*/
+    /*border-bottom: none;*/
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 1em;
+    color: lightgray;
+    overflow: scroll;
+    min-width: 192px;
+}
+.track-element {
+    border: 1px solid black;
+    min-height: 100px;
+    width: 180px;
+    background-color: #31353A;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+.track-element-color {
+    flex-grow: 3;
+    background-color: greenyellow;
+}
+
+.track-element-tools {
+    flex-grow: 20;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+.track-name {
+    padding-top: 0.5em;
+    padding-left: 3em;
+    /*flex-grow: 1;*/
+    color: lightgray;
+    font-family: monospace;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.track-volume, .balance {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    padding-right: 0.5em;
+    padding-left: 0.5em;
+    justify-content: space-around;
+    align-items: center;
+}
+.right-icon, .left-icon, .mute-icon, .solo-icon {
+    font-size: 1.3em;
+    font-weight: bold;
+    font-family: monospace;
+    font-style: normal;
+    pointer-events: none;
+}
+
+.left-icon {
+    color: lightgray;
+    padding-left: 2px;
+    padding-right: 1px;
+}
+
+.right-icon {
+    color: lightgray;
+    padding-left: 1px;
+    padding-right: 4px;
+}
+
+.mute-icon, .solo-icon {
+    font-size: 1.3em;
+}
+
+.ui.inverted.grey.slider.track {
+    padding-top: 0.2em !important;
+    padding-bottom: 0.2em !important;
+    padding-left: 1em !important;
+    padding-right: 1em !important;
+}
+
+.track-controls {
+    padding-top: 0.2em;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: 100%;
+    /*flex-grow: 6;*/
+    align-items: center;
+    justify-content: space-around;
+}
+
+.item.tool {
+    color: grey;
+}
+
+.item.tool:hover {
+    color: white;
+}
+
+a.item.menu {
+    background-color: #4d5ed1 !important;
+}
+
+a.item.menu:hover {
+    background-color: #4d5ed1 !important;
+}
+
+a.item.volume-slider {
+    width: 15em; height: auto;
+}
+i.icon {
+    margin: 0 !important;
+}
+
+</style>
 
 <div class="track-element-tools">
     <div class="track-name">
