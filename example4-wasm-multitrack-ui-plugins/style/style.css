@@ -245,4 +245,6 @@ i.icon {
 .add-plugin:hover {
     background-color: #151718;
 }
-
+.pluginAutomationParamId{
+    color: white;
+}
