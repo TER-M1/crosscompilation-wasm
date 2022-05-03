@@ -264,7 +264,7 @@ export class SimpleAudioWorkletNode extends AudioWorkletNode {
 }
 
 
-export class MainAudio {
+class MainAudio {
     /**
      *
      * @type {[AudioTrack]}
@@ -280,22 +280,32 @@ export class MainAudio {
         this.masterVolumeNode.connect(this.audioCtx.destination);
     }
 
-    async addTrack(track) {
-        await track.load();
-        this.maxGlobalTimer = Math.max(track.duration, this.maxGlobalTimer)
-        track.gainOutNode.connect(this.masterVolumeNode);
-        this.tracks.push(track);
-        drawBuffer(this.canvas[this.tracks.length - 1], track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16), 2000, 99);
-        let trackEl = document.createElement("track-element");
-        trackEl.track = track;
-        trackEl.id = this.tracks.length;
-        trackEl.className = `track-element`;
-        this.tracksDiv.appendChild(trackEl);
+    addTrack(track) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                await track.load();
+                this.maxGlobalTimer = Math.max(track.duration, this.maxGlobalTimer)
+                track.gainOutNode.connect(this.masterVolumeNode);
+                this.tracks.push(track);
+                drawBuffer(this.canvas[this.tracks.length - 1], track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16), 2000, 99);
+                let trackEl = document.createElement("track-element");
+                trackEl.track = track;
+                trackEl.id = this.tracks.length;
+                trackEl.className = `track-element`;
+                this.tracksDiv.appendChild(trackEl);
+                console.log("finsied");
+                resolve(track);
+            } catch (e) {
+                reject(e);
+            }
+
+        })
     }
+
 }
 
 
-export class AudioTrack {
+class AudioTrack {
     operableDecodedAudioBuffer = undefined;
     decodedAudioBuffer = undefined;
     duration = undefined;
@@ -351,6 +361,29 @@ export class AudioTrack {
         // // source.connect(node).connect(audioCtx.destination);
         // connectPlugin(mainAudio.masterVolumeNode, gainNode);
         this.pannerNode.connect(this.gainOutNode);
-        this.audioWorkletNode.connect(this.pannerNode);
+        // this.gainOutNode.connect(this.audioWorkletNode);
+        this.audioWorkletNode.connect(this.gainOutNode);
     }
 }
+
+function loadMultiTrackDir() {
+//     const path = require('path');
+//     const fs = require('fs');
+// //joining path of directory
+//     const directoryPath = path.join(__dirname, 'Documents');
+//     console.log(directoryPath);
+// //passsing directoryPath and callback function
+//     fs.readdir(directoryPath, function (err, files) {
+//         //handling error
+//         if (err) {
+//             return console.log('Unable to scan directory: ' + err);
+//         }
+//         //listing all files using forEach
+//         files.forEach(function (file) {
+//             // Do whatever you want to do with the file
+//             console.log(file);
+//         });
+//     });
+}
+
+export {MainAudio, AudioTrack, loadMultiTrackDir};
