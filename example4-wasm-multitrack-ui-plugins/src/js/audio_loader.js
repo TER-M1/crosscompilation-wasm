@@ -171,6 +171,7 @@ export class MainAudio {
         let trackEl = document.createElement("track-element");
         trackEl.setAttribute("track", track);
         trackEl.setAttribute("id", this.tracks.length);
+        trackEl.className = `track-element`;
         console.log(trackEl);
         this.tracksDiv.appendChild(trackEl);
 
