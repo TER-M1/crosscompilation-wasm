@@ -249,7 +249,7 @@ function updateAudioTimer(mainAudio) {
     btnStart.hidden = false;
     var val;
 
-
+    let masterV = $('.master');
     $('.master').slider({
         start: 50,
         value: 50,
@@ -266,6 +266,7 @@ function updateAudioTimer(mainAudio) {
             mainAudio.masterVolumeNode.gain.value = val;
         }
     });
+    console.log(masterV)
     
     let mute = false;
 

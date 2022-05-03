@@ -145,17 +145,17 @@ i.icon {
 <div class="track-element-tools">
     <div class="track-name">
         
-        <i class="times red icon"></i>
+        
     </div>
     <div class="track-volume">
         <i class="volume down icon"></i>
-        <div class="ui inverted grey slider track sound small "></div>
+        <div class="slider track sound"><input type="range" min="1" max="100" value="50" class="input track sound"></div>
         <i class="volume up icon"></i>
 
     </div>
     <div class="balance">
         <i class="left-icon">L</i>
-        <div class="ui inverted grey slider track balance small"></div>
+        <div class="track balance"><input type="range" min="1" max="100" value="50" class="input track balance"></div>
         <i class="right-icon">R</i>
 
     </div>
@@ -191,15 +191,7 @@ class TrackElement extends HTMLElement {
 
 
     connectedCallback() {
-        this.track = this.attributes.track.value;
-        this.id = this.attributes.id.value;
-        console.log(this.track);
-
-        console.log("element defined");
-
-        // this.shadowRoot.appendChild(template.content.cloneNode(true));
         this.shadowRoot.innerHTML = template.innerHTML;
-        // this.innerHTML = template.innerHTML;
         this.fixTrackNumber();
         this.defineListeners();
         this.defineRemoveTrack();
@@ -212,46 +204,34 @@ class TrackElement extends HTMLElement {
     fixTrackNumber() {
         const name = this.shadowRoot.querySelector(".track-name");
         name.id = this.id;
-        name.innerHTML = "Track " + this.id;
+        name.innerHTML = `
+        Track ${this.id}
+        <a class="item tool close">
+        <i class="times red icon"></i>
+        </a>
+        `;
     }
 
     defineListeners() {
-        // let slider_volume = this.shadowRoot.querySelector(".track.sound");
-        // console.log(slider_volume);
-        $(".track.sound").slider({
-            start: 50,
-            value: 50,
-            range: 'max',
-            min: 0,
-            max: 100,
-            smooth: true,
-            onMove: function (value) {
-                let val;
-                console.log("track n" + this.id + " val at " + value);
-                val = value / 100;
-                this.track.gainOutNode.gain.value = val;
-            }
-        });
-        // let slider_balance = this.shadowRoot.querySelector(".track.balance");
-        $(".track.balance").slider({
-            start: 0,
-            value: 0,
-            range: 'max',
-            min: -1,
-            max: 1,
-            smooth: true,
-            onMove: function (value) {
-                this.track.pannerNode.positionX.value = value;
-                console.log('onmove' + value);
-            }
-        });
+        var rangeInputSound = this.shadowRoot.querySelector("input.track.sound");
+        rangeInputSound.onchange = (e) => {
+            let val;
+            val = rangeInputSound.value / 100;
+            this.track.gainOutNode.gain.value = val;
+        };
+
+        var rangeInputBalance = this.shadowRoot.querySelector("input.track.balance");
+        rangeInputBalance.onchange = (e) => {
+            this.track.pannerNode.positionX.value = rangeInputBalance.value;
+        };
+
 
 
     }
 
     defineRemoveTrack() {
         // let removeButton = this.shadowRoot.querySelector(".red.icon");
-        $(".red.icon").onclick = () => {
+        $("item.tool.close").onclick = () => {
             console.log("should remove the track");
         }
     }
@@ -307,12 +287,10 @@ export class MainAudio {
         this.tracks.push(track);
         drawBuffer(this.canvas[this.tracks.length - 1], track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16), 2000, 99);
         let trackEl = document.createElement("track-element");
-        trackEl.setAttribute("track", track);
-        trackEl.setAttribute("id", this.tracks.length);
+        trackEl.track = track;
+        trackEl.id = this.tracks.length;
         trackEl.className = `track-element`;
-        console.log(trackEl);
         this.tracksDiv.appendChild(trackEl);
-
     }
 }
 
