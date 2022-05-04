@@ -35,6 +35,7 @@ class SimpleProcessor extends AudioWorkletProcessor {
                 this.audio = e.data.audio;
             } else if (typeof e.data.position === "number") {
                 this.playhead = e.data.position * 44100;
+                this.port.postMessage({playhead: this.playhead})
             }
         };
         this._heapInputBuffer = new HeapAudioBuffer(
@@ -105,8 +106,10 @@ class SimpleProcessor extends AudioWorkletProcessor {
             if (!playing) continue; // Not playing
             if (this.playhead >= audioLength) {
                 // Play was finished
-                if (loop)
+                if (loop) {
                     this.playhead = 0; // Loop just enabled, reset playhead
+                    this.port.postMessage({playhead: this.playhead})
+                }
                 else continue; // EOF without loop
             }
 
@@ -123,6 +126,7 @@ class SimpleProcessor extends AudioWorkletProcessor {
                 );
             }
             this.playhead++;
+            this.port.postMessage({playhead: this.playhead})
         }
 
         return true;
