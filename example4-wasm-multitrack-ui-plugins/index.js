@@ -1,12 +1,9 @@
-import {MainAudio, AudioTrack, SimpleAudioWorkletNode} from "./src/js/audio_loader.js";
+import {MainAudio, AudioTrack, SimpleAudioWorkletNode, audioCtx, mainAudio} from "./src/js/audio_loader.js";
 import {connectPlugin, mountPlugin, addEventOnPlugin, populateParamSelector} from "./src/js/plugin_parameters.js";
 import {updateAudioTimer} from "./src/js/timer.js";
 import {activateMainVolume} from "./src/js/page_init.js";
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-}
+
 
 const btnStart = document.getElementById("btn-start");
 const zoomIn = document.getElementById("btn-zoom-in");
@@ -23,16 +20,18 @@ var currentPluginAudioNode;
  *
  * @param{MainAudio} mainAudio
  */
-function updateCursorTracks(mainAudio) {
+function updateCursorTracks(track) {
     for(let i = 0; i < mainAudio.tracks.length; i++) {
         let playHead = mainAudio.tracks[i].audioWorkletNode.playhead;
-        let trackCanvas = mainAudio.canvas[i];
+        let trackCanvas = mainAudio.tracks[i].canvas;
 
         let ctx = trackCanvas.getContext("2d");
         ctx.clearRect(0, 0, trackCanvas.width, trackCanvas.height);
         ctx.putImageData(trackCanvas.bufferState, 0, 0);
+
         let rapport = (playHead * 100) / mainAudio.tracks[i].operableDecodedAudioBuffer.length;
         let position = (trackCanvas.width / 100) * rapport;
+
         ctx.fillStyle = "lightgrey";
         ctx.fillRect(position, 0, 2, trackCanvas.height);
     }
@@ -52,7 +51,7 @@ function updateCursorTracks(mainAudio) {
     PROCESSOR INITIALIZATION
      */
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
-    let mainAudio = new MainAudio(audioCtx);
+
 
 
     /*
