@@ -1,154 +1,57 @@
-import {MainAudio, AudioTrack, SimpleAudioWorkletNode, loadMultiTrackDir} from "./src/js/audio_loader.js";
-
-
-var audioUrl = "./song/BasketCaseGreendayriffDI.mp3";
+import {MainAudio, AudioTrack, SimpleAudioWorkletNode} from "./src/js/audio_loader.js";
+import {connectPlugin, mountPlugin, addEventOnPlugin, populateParamSelector} from "./src/js/plugin_parameters.js";
+import {updateAudioTimer} from "./src/js/timer.js";
+import {activateMainVolume} from "./src/js/page_init.js";
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 if (audioCtx.state === "suspended") {
     audioCtx.resume();
 }
-/** @type {HTMLButtonElement} */
 
 const btnStart = document.getElementById("btn-start");
-/** @type {HTMLButtonElement} */
-
 const zoomIn = document.getElementById("btn-zoom-in");
-/** @type {HTMLButtonElement} */
-
 const zoomOut = document.getElementById("btn-zoom-out");
-// @ts-ignore
 const btnRestart = document.getElementById("restart");
-// @ts-ignore
 const inputLoop = document.getElementById("loop");
-//@ts-ignore
 const volumeinput = document.getElementById("volume");
-//@ts-ignore
 const inputMute = document.getElementById("mute");
 
-const connectPlugin = (sourceNode, audioNode) => {
-    sourceNode.connect(audioNode);
-    audioNode.connect(audioCtx.destination);
-};
-
 var canvas = [];
-// var canvas0 = document.getElementById("track0");
 for (let i = 0; i < 12; i++) {
     canvas.push(document.getElementById(`track${i}`));
 }
 
-//@ts-ignore
 var currentPluginAudioNode;
 
-const mountPlugin = (mount, domModel) => {
-    mount.innerHTML = '';
-    mount.appendChild(domModel);
-};
-
-function changeVol(gainNode, vol) {
-    if (vol.value === 0) {
-        gainNode.gain.value = -1;
-    } else if (!inputMute.checked) {
-        gainNode.gain.value = vol.value * 0.000001;
-    }
-}
-
-function muteUnmuteTrack(btn) {
-    console.log("mute")
-}
-
-var timerDiv = document.querySelector(".timer");
-
-/** @type {HTMLSelectElement} */ const pluginParamSelector = document.querySelector('#pluginParamSelector');
-/** @type {HTMLInputElement} */ const pluginAutomationLengthInput = document.querySelector('#pluginAutomationLength');
-/** @type {HTMLInputElement} */ const pluginAutomationApplyButton = document.querySelector('#pluginAutomationApply');
-/** @type {HTMLDivElement} */ const bpfContainer = document.querySelector('#pluginAutomationEditor');
-
-
-pluginParamSelector.addEventListener('input', async (e) => {
-    if (!currentPluginAudioNode) return;
-    const paramId = e.target.value;
-    if (paramId === '-1') return;
-    if (Array.from(bpfContainer.querySelectorAll('.pluginAutomationParamId')).find(/** @param {HTMLSpanElement} span */(span) => span.textContent === paramId)) return;
-    const div = document.createElement('div');
-    div.classList.add('pluginAutomation');
-    const span = document.createElement('span');
-    span.classList.add('pluginAutomationParamId');
-    span.textContent = paramId;
-    div.appendChild(span);
-    const bpf = document.createElement('webaudiomodules-host-bpf');
-    const info = await currentPluginAudioNode.getParameterInfo(paramId);
-    const {minValue, maxValue, defaultValue} = info[paramId];
-    bpf.setAttribute('min', minValue);
-    bpf.setAttribute('max', maxValue);
-    bpf.setAttribute('default', defaultValue);
-    div.appendChild(bpf);
-    bpfContainer.appendChild(div);
-    pluginParamSelector.selectedIndex = 0;
-});
-pluginAutomationLengthInput.addEventListener('input', (e) => {
-    const domain = +e.target.value;
-    if (!domain) return;
-    bpfContainer.querySelectorAll('webaudiomodules-host-bpf').forEach(/** @param {import("./src/js/bpf").default} bpf */(bpf) => {
-        bpf.setAttribute('domain', domain);
-    });
-});
-pluginAutomationApplyButton.addEventListener('click', () => {
-    if (!currentPluginAudioNode) return;
-    bpfContainer.querySelectorAll('.pluginAutomation').forEach(/** @param {HTMLDivElement} div */(div) => {
-        const paramId = div.querySelector('.pluginAutomationParamId').textContent;
-        /** @type {import("./src/js/bpf").default} */
-        const bpf = div.querySelector('webaudiomodules-host-bpf');
-        console.log(bpf);
-        bpf.apply(currentPluginAudioNode, paramId);
-    });
-});
-const populateParamSelector = async (wamNode) => {
-    bpfContainer.innerHTML = '';
-    pluginParamSelector.innerHTML = '<option value="-1" disabled selected>Add Automation...</option>';
-    const info = await wamNode.getParameterInfo();
-    // eslint-disable-next-line
-    for (const paramId in info) {
-        const {minValue, maxValue, label} = info[paramId];
-        const option = new Option(`${paramId} (${label}): ${minValue} - ${maxValue}`, paramId);
-        pluginParamSelector.add(option);
-    }
-    pluginParamSelector.selectedIndex = 0;
-};
-
-/**
- *
- * @param{MainAudio} mainAudio
- */
-function updateAudioTimer(mainAudio) {
-    var hours = Math.floor(mainAudio.maxGlobalTimer / 3600);
-    var mins = Math.floor(mainAudio.maxGlobalTimer / 60);
-    var secs = Math.floor(mainAudio.maxGlobalTimer % 60);
-    if (secs < 10) {
-        secs = '0' + String(secs);
-    }
-    if (mins < 10) {
-        mins = '0' + String(mins);
-    }
-    if (hours < 10) {
-        hours = '0' + String(hours);
-    }
-    timerDiv.innerHTML = `${hours}:${mins}:${secs}`;
-}
 
 (async () => {
+    var val;
+    let mute = false;
+    var intervalTimerId = undefined;
+    btnStart.hidden = false;
+    // var trackElements = $(".track.sound");
+    // let t = document.getElementsByClassName("track sound");
+
+
+    /*
+    PROCESSOR INITIALIZATION
+     */
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
-    // let node = new SimpleNode(audioCtx);
     let mainAudio = new MainAudio(audioCtx, canvas);
 
+
+    /*
+    MULTI TRACKS INITIALZATION
+     */
     let asyncAddTrack = [
         mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/bass.wav")),
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/bass.wav")),
         mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/drums.wav")),
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/drums.wav")),
         mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/other.wav")),
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/other.wav")),
         mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/vocals.wav"))
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/vocals.wav"))
     ]
     let res = await Promise.all(
         asyncAddTrack
@@ -156,45 +59,45 @@ function updateAudioTimer(mainAudio) {
     console.log(res);
     console.log(mainAudio.tracks);
     console.log(mainAudio.maxGlobalTimer);
+
+
+    /*
+    INITIALIZATION PAGES ELEMENTS
+     */
     updateAudioTimer(mainAudio);
+    activateMainVolume(mainAudio, val);
 
-    // @ts-ignore // définition du canvas pour l'onde
 
-    // for (let i = 0; i < canvas.length;i++) {
-    //     drawBuffer(canvas[i], mainAudio.tracks[i].decodedAudioBuffer, "#" + Math.floor(Math.random()*16777215).toString(16), 2000, 99);
-    // }
-    // drawBuffer(canvas0, mainAudio.tracks[1].decodedAudioBuffer, "red", 1000, 300)
+    /*
+    PLUGIN CONNECTION
+     */
+    // const {default: initializeWamHost} = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
+    // const [hostGroupId] = await initializeWamHost(audioCtx);
+    //
+    // var {default: WAM} = await import ("https://michael-marynowicz.github.io/TER/pedalboard/index.js");
+    // var instance = await WAM.createInstance(hostGroupId, audioCtx);
+    // connectPlugin(audioCtx, mainAudio.tracks[0].audioWorkletNode, instance._audioNode);
+    // currentPluginAudioNode = instance._audioNode;
+    // connectPlugin(audioCtx, mainAudio.tracks[0].audioWorkletNode, mainAudio.masterVolumeNode);
+    // var pluginDomModel = await instance.createGui();
+    // mountPlugin(document.querySelector("#mount2"), pluginDomModel);
 
-    // let operableDecodedAudioBuffer = Object.setPrototypeOf(
-    //     decodedAudioBuffer,
-    //     OperableAudioBuffer.prototype
-    // );
-    // const node = new SimpleNode(audioCtx);
-    // node.setAudio(operableDecodedAudioBuffer.toArray());
-    // node.connect(audioCtx.destination);
 
-    const {default: initializeWamHost} = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
-    const [hostGroupId] = await initializeWamHost(audioCtx);
+    /*
+    PLUGIN PARAMETERS CONNECTION
+     */
+    // await populateParamSelector(instance._audioNode);
+    //
+    // pluginParamSelector.onclick = () => {
+    //     populateParamSelector(instance._audioNode);
+    // };
+    //
+    // addEventOnPlugin(currentPluginAudioNode);
 
-    var {default: WAM} = await import ("https://michael-marynowicz.github.io/TER/pedalboard/index.js");
-    var instance = await WAM.createInstance(hostGroupId, audioCtx);
-    connectPlugin(mainAudio.tracks[0].audioWorkletNode, instance._audioNode);
-    currentPluginAudioNode = instance._audioNode;
 
-    var pluginDomModel = await instance.createGui();
-
-    mountPlugin(document.querySelector("#mount2"), pluginDomModel);
-
-    await populateParamSelector(instance._audioNode);
-
-    pluginParamSelector.onclick = () => {
-        populateParamSelector(instance._audioNode);
-    };
-
-    // source.connect(node).connect(audioCtx.destination);
-    connectPlugin(mainAudio.tracks[0].audioWorkletNode, mainAudio.masterVolumeNode);
-    var intervalTimerId = undefined;
-    //EVENT LISTENER
+    /*
+    EVENT LISTENERS
+     */
     btnStart.onclick = () => {
         mainAudio.tracks.forEach((track) => {
             if (audioCtx.state === "suspended") {
@@ -235,49 +138,14 @@ function updateAudioTimer(mainAudio) {
         })
 
     };
-    btnStart.hidden = false;
-    var val;
-
-    let masterV = $('.master');
-    $('.master').slider({
-        start: 50,
-        value: 50,
-        range: 'max',
-        min: 0,
-        max: 100,
-        smooth: true,
-        onMove: function (value) {
-            console.log('master volume at ' + value)
-            val = value / 100;
-            // mainAudio.tracks.forEach((track) => {
-            //     track.gainOutNode.value = val;
-            //     });
-            mainAudio.masterVolumeNode.gain.value = val;
-        }
-    });
-    console.log(masterV)
-
-    let mute = false;
-
-
-    var trackElements = $(".track.sound");
-
-    let t = document.getElementsByClassName("track sound");
 
     inputMute.onclick = () => {
-        // trackElements.forEach((trackElem) => {
-        //     console.log(trackElem);
-        // });
-        // console.log(trackElements)
-        // console.log(trackElements.length);
-
-
         if (!mute) {
             console.log("mute");
             // mainAudio.tracks.forEach((track) => {
             // track.gainOutNode.value = 0;
             // });
-            // mainAudio.masterVolumeNode.gain.value = -1;
+
             mainAudio.masterVolumeNode.gain.value = 0;
             mute = true;
         } else {
