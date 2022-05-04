@@ -243,16 +243,27 @@ customElements.define(
 );
 
 export class SimpleAudioWorkletNode extends AudioWorkletNode {
+    playhead = 0;
+
     /**
      * @param {BaseAudioContext} context
      */
     constructor(context) {
         super(context, "simple-processor");
+        this.port.onmessage = (e) => {
+            if(e.data.playhead) {
+                this.playhead = e.data.playhead;
+            }
+        }
     }
 
     /** @param {number} position set playhead in seconds */
     setPosition(position) {
         this.port.postMessage({position});
+    }
+
+    getPlayheadPosition() {
+        return playhead;
     }
 
     /**
@@ -287,18 +298,22 @@ class MainAudio {
                 this.maxGlobalTimer = Math.max(track.duration, this.maxGlobalTimer)
                 track.gainOutNode.connect(this.masterVolumeNode);
                 this.tracks.push(track);
-                drawBuffer(this.canvas[this.tracks.length - 1], track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16), 2000, 99);
+
+                let trackCanvas = this.canvas[this.tracks.length - 1];
+                trackCanvas.width = 2000;
+                trackCanvas.height = 99;
+                drawBuffer(trackCanvas, track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16));
+
                 let trackEl = document.createElement("track-element");
                 trackEl.track = track;
                 trackEl.id = this.tracks.length;
                 trackEl.className = `track-element`;
                 this.tracksDiv.appendChild(trackEl);
-                console.log("finsied");
+
                 resolve(track);
             } catch (e) {
                 reject(e);
             }
-
         })
     }
 
