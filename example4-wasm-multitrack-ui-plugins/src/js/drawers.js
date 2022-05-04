@@ -122,3 +122,4 @@ export function drawBuffer(canvas, buffer, color) {
     }
     canvas.bufferState = ctx.getImageData(0,0,canvas.width,canvas.height);
 }
+

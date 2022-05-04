@@ -166,11 +166,11 @@ i.icon {
     </div>
 
     <div class="track-controls">
-        <a class="item tool mute" href="#">
+        <a class="item tool mute">
             <i class="mute-icon">M</i>
         </a>
-        <a class="item tool">
-            <i class="mute-icon solo">S</i>
+        <a class="item tool solo">
+            <i class="mute-icon">S</i>
         </a>
         <a class="item tool">
             <i class="project diagram icon"></i>
@@ -265,6 +265,49 @@ customElements.define(
     TrackElement
 );
 
+const templateCanvas = document.createElement("template");
+templateCanvas.innerHTML = /*html*/`
+<canvas height="99" width="2000" class="can"></canvas>
+`;
+
+
+class WaveForm extends HTMLElement {
+    id = undefined;
+    canvas = undefined;
+    constructor() {
+        super();
+        this.attachShadow({mode: "open"});
+        // this.className = "wave-form"
+    }
+
+
+    connectedCallback() {
+        this.shadowRoot.innerHTML = templateCanvas.innerHTML;
+        this.defClass();
+        this.defId();
+    }
+
+    disconnectedCallback() {
+
+    }
+    defClass(){
+        console.log("wave-form defined")
+        this.className="wave-form"
+    }
+    defId(){
+        this.canvas = this.shadowRoot.querySelector(".can");
+        this.canvas.id = this.id;
+    }
+
+
+}
+
+customElements.define(
+    "wave-form",
+    WaveForm
+);
+
+
 export class SimpleAudioWorkletNode extends AudioWorkletNode {
     playhead = 0;
 
@@ -305,9 +348,11 @@ class MainAudio {
      */
     tracks = [];
     tracksDiv = document.querySelector(".tools-tracks");
-    constructor(audioCtx, canvas = []) {
+    CanvasDiv = document.querySelector(".audio-tracks");
+
+    constructor(audioCtx) {
         this.audioCtx = audioCtx;
-        this.canvas = canvas;
+        this.canvas = [];
         this.maxGlobalTimer = 0;
         this.masterVolumeNode = audioCtx.createGain();
         this.masterVolumeNode.connect(this.audioCtx.destination);
@@ -321,9 +366,14 @@ class MainAudio {
                 track.gainOutNode.connect(this.masterVolumeNode);
                 this.tracks.push(track);
 
-                let trackCanvas = this.canvas[this.tracks.length - 1];
+                let waveForm = document.createElement("wave-form");
+                waveForm.id = "track"+(this.tracks.length - 1);
+                this.CanvasDiv.appendChild(waveForm);
+
+                let trackCanvas = waveForm.canvas;
                 trackCanvas.width = 2000;
                 trackCanvas.height = 99;
+                this.canvas.push(trackCanvas)
                 drawBuffer(trackCanvas, track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16));
 
                 let trackEl = document.createElement("track-element");
