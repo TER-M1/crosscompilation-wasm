@@ -1,4 +1,4 @@
-import {MainAudio, AudioTrack, SimpleAudioWorkletNode, loadMultiTrackDir} from "./src/js/audio_loader.js";
+import {MainAudio, AudioTrack, SimpleAudioWorkletNode} from "./src/js/audio_loader.js";
 import {connectPlugin, mountPlugin, addEventOnPlugin, populateParamSelector} from "./src/js/plugin_parameters.js";
 import {updateAudioTimer} from "./src/js/timer.js";
 import {activateMainVolume} from "./src/js/page_init.js";
@@ -45,13 +45,13 @@ var currentPluginAudioNode;
      */
     let asyncAddTrack = [
         mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/bass.wav")),
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/bass.wav")),
         mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/drums.wav")),
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/drums.wav")),
         mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/other.wav")),
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/other.wav")),
         mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/bad_guy/vocals.wav"))
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/vocals.wav"))
     ]
     let res = await Promise.all(
         asyncAddTrack
