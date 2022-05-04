@@ -98,6 +98,11 @@ template.innerHTML = /*html*/`
 .mute-icon, .solo-icon {
     font-size: 1.3em;
 }
+a.item.tool.mute:link {
+    text-decoration: inherit;
+    color: inherit;
+    cursor: auto;
+}
 
 .ui.inverted.grey.slider.track {
     padding-top: 0.2em !important;
@@ -161,11 +166,11 @@ i.icon {
     </div>
 
     <div class="track-controls">
-        <a class="item tool">
+        <a class="item tool mute" href="#">
             <i class="mute-icon">M</i>
         </a>
         <a class="item tool">
-            <i class="mute-icon">S</i>
+            <i class="mute-icon solo">S</i>
         </a>
         <a class="item tool">
             <i class="project diagram icon"></i>
@@ -178,6 +183,10 @@ i.icon {
   `;
 
 class TrackElement extends HTMLElement {
+    /**
+     *
+     * @type {AudioTrack}
+     */
     track = undefined;
     /**
      *
@@ -215,21 +224,38 @@ class TrackElement extends HTMLElement {
     defineListeners() {
         var rangeInputSound = this.shadowRoot.querySelector("input.track.sound");
         rangeInputSound.oninput = (e) => {
-            let val;
-            val = rangeInputSound.value;
-            this.track.gainOutNode.gain.value = val;
+            if (!this.track.isMuted()) {
+                this.track.setVolume(rangeInputSound.value);
+            }
+            this.track.oldGainValue = rangeInputSound.value;
         };
 
         var rangeInputBalance = this.shadowRoot.querySelector("input.track.balance");
         rangeInputBalance.oninput = (e) => {
             this.track.pannerNode.pan.value = rangeInputBalance.value;
         };
+
+        var muteTrack = this.shadowRoot.querySelector(".item.tool.mute");
+
+        muteTrack.onclick = () => {
+            if (this.track.isMuted()) {
+                muteTrack.style.color = null;
+                this.track.gainOutNode.gain.value = this.track.oldGainValue;
+                this.track.setVolume(this.track.oldGainValue);
+                this.track.unMute();
+            } else {
+                this.track.oldGainValue = this.track.gainOutNode.gain.value;
+                muteTrack.style.color = "red";
+                this.track.mute();
+            }
+        }
     }
 
     defineRemoveTrack() {
         // let removeButton = this.shadowRoot.querySelector(".red.icon");
-        $("item.tool.close").onclick = () => {
+        this.shadowRoot.querySelector(".item.tool.close").onclick = () => {
             console.log("should remove the track");
+            this.remove();
         }
     }
 }
@@ -279,7 +305,6 @@ class MainAudio {
      */
     tracks = [];
     tracksDiv = document.querySelector(".tools-tracks");
-
     constructor(audioCtx, canvas = []) {
         this.audioCtx = audioCtx;
         this.canvas = canvas;
@@ -313,7 +338,6 @@ class MainAudio {
             }
         })
     }
-
 }
 
 
@@ -321,12 +345,13 @@ class AudioTrack {
     operableDecodedAudioBuffer = undefined;
     decodedAudioBuffer = undefined;
     duration = undefined;
+    _isMuted = false;
 
     /**
      *
-     * @param audioCtx
-     * @param audioWorkletNode
-     * @param fpath
+     * @param{AudioContext} audioCtx
+     * @param{AudioWorkletNode} audioWorkletNode
+     * @param{String} fpath
      * @param initWamHostPath
      * @param wamIndexPath
      */
@@ -336,13 +361,13 @@ class AudioTrack {
         this.fpath = fpath;
         this.pannerNode = this.audioCtx.createStereoPanner();
         this.gainOutNode = this.audioCtx.createGain();
+        this.oldGainValue = this.gainOutNode.gain.value;
         this.name = this.fpath.split("/").pop();
         this.initWamHostPath = initWamHostPath;
         this.wamIndexPath = wamIndexPath;
     }
 
     async load() {
-
         let response = await fetch(this.fpath);
         let audioArrayBuffer = await response.arrayBuffer();
         this.decodedAudioBuffer = await this.audioCtx.decodeAudioData(audioArrayBuffer);
@@ -352,28 +377,24 @@ class AudioTrack {
             OperableAudioBuffer.prototype
         );
         this.audioWorkletNode.setAudio(this.operableDecodedAudioBuffer.toArray());
-        // const { default: initializeWamHost } = await import(this.initWamHostPath);
-        // const [hostGroupId] = await initializeWamHost(this.audioCtx);
-        //
-        //
-        //
-        // const { default: WAM } = await import (this.wamIndexPath);
-        // const instance = await WAM.createInstance(hostGroupId, audioCtx);
-        //
-        // connectPlugin(this.audioWorkletNode, instance._audioNode);
-        // currentPluginAudioNode = instance._audioNode;
-        //
-        // const pluginDomModel = await instance.createGui();
-        //
-        // // plugin info for automation
-        // // showPluginInfo(instance, pluginDomModel);
-        // await populateParamSelector(instance.audioNode);
-        //
-        // mountPlugin(pluginDomModel);
-        //
-        // // source.connect(node).connect(audioCtx.destination);
-        // connectPlugin(mainAudio.masterVolumeNode, gainNode);
         this.audioWorkletNode.connect(this.pannerNode).connect(this.gainOutNode);
+    }
+
+    isMuted() {
+        return this._isMuted;
+    }
+
+    mute() {
+        this.setVolume(0);
+        this._isMuted = true;
+    }
+
+    unMute() {
+        this._isMuted = false;
+    }
+
+    setVolume(value) {
+        this.gainOutNode.gain.value = value;
     }
 }
 
