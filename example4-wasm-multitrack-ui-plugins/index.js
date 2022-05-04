@@ -16,11 +16,6 @@ const inputLoop = document.getElementById("loop");
 const volumeinput = document.getElementById("volume");
 const inputMute = document.getElementById("mute");
 
-var canvas = [];
-for (let i = 0; i < 12; i++) {
-    canvas.push(document.getElementById(`track${i}`));
-}
-
 var currentPluginAudioNode;
 
 
@@ -57,7 +52,7 @@ function updateCursorTracks(mainAudio) {
     PROCESSOR INITIALIZATION
      */
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
-    let mainAudio = new MainAudio(audioCtx, canvas);
+    let mainAudio = new MainAudio(audioCtx);
 
 
     /*
