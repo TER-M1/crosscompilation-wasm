@@ -20,16 +20,18 @@ var currentPluginAudioNode;
  *
  * @param{MainAudio} mainAudio
  */
-function updateCursorTracks(mainAudio) {
+function updateCursorTracks(track) {
     for(let i = 0; i < mainAudio.tracks.length; i++) {
         let playHead = mainAudio.tracks[i].audioWorkletNode.playhead;
-        let trackCanvas = mainAudio.canvas[i];
+        let trackCanvas = mainAudio.tracks[i].canvas;
 
         let ctx = trackCanvas.getContext("2d");
         ctx.clearRect(0, 0, trackCanvas.width, trackCanvas.height);
         ctx.putImageData(trackCanvas.bufferState, 0, 0);
+
         let rapport = (playHead * 100) / mainAudio.tracks[i].operableDecodedAudioBuffer.length;
         let position = (trackCanvas.width / 100) * rapport;
+
         ctx.fillStyle = "lightgrey";
         ctx.fillRect(position, 0, 2, trackCanvas.height);
     }

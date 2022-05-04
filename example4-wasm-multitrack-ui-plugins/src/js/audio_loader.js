@@ -32,11 +32,11 @@ class MainAudio {
                 waveForm.id = "track" + track.id;
                 this.canvasDiv.appendChild(waveForm);
 
-                let trackCanvas = waveForm.canvas;
-                trackCanvas.width = 4000;
-                trackCanvas.height = 99;
-                this.canvas.push(trackCanvas)
-                drawBuffer(trackCanvas, track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16));
+
+                track.canvas = waveForm.canvas;
+                track.canvas.width = 4000;
+                track.canvas.height = 99;
+                drawBuffer(track.canvas, track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16));
 
                 let trackEl = document.createElement("track-element");
                 trackEl.track = track;
@@ -66,6 +66,7 @@ class AudioTrack {
     decodedAudioBuffer = undefined;
     duration = undefined;
     _isMuted = false;
+    canvas = undefined;
 
     /**
      *
