@@ -149,13 +149,13 @@ i.icon {
     </div>
     <div class="track-volume">
         <i class="volume down icon"></i>
-        <div class="slider track sound"><input type="range" min="1" max="100" value="50" class="input track sound"></div>
+        <div class="slider track sound"><input type="range" min="0" max="1" value=".5" step=".01" class="input track sound"></div>
         <i class="volume up icon"></i>
 
     </div>
     <div class="balance">
         <i class="left-icon">L</i>
-        <div class="track balance"><input type="range" min="1" max="100" value="50" class="input track balance"></div>
+        <div class="track balance"><input type="range" min="-1" max="1" value="0" step=".1" class="input track balance"></div>
         <i class="right-icon">R</i>
 
     </div>
@@ -177,8 +177,8 @@ i.icon {
 
   `;
 
-
 class TrackElement extends HTMLElement {
+    track = undefined;
     /**
      *
      * @param {AudioTrack} track
@@ -205,7 +205,7 @@ class TrackElement extends HTMLElement {
         const name = this.shadowRoot.querySelector(".track-name");
         name.id = this.id;
         name.innerHTML = `
-        Track ${this.id}
+        ${this.track.name}
         <a class="item tool close">
         <i class="times red icon"></i>
         </a>
@@ -214,19 +214,16 @@ class TrackElement extends HTMLElement {
 
     defineListeners() {
         var rangeInputSound = this.shadowRoot.querySelector("input.track.sound");
-        rangeInputSound.onchange = (e) => {
+        rangeInputSound.oninput = (e) => {
             let val;
-            val = rangeInputSound.value / 100;
+            val = rangeInputSound.value;
             this.track.gainOutNode.gain.value = val;
         };
 
         var rangeInputBalance = this.shadowRoot.querySelector("input.track.balance");
-        rangeInputBalance.onchange = (e) => {
-            this.track.pannerNode.positionX.value = rangeInputBalance.value;
+        rangeInputBalance.oninput = (e) => {
+            this.track.pannerNode.pan.value = rangeInputBalance.value;
         };
-
-
-
     }
 
     defineRemoveTrack() {
@@ -309,7 +306,7 @@ class MainAudio {
                 trackEl.id = this.tracks.length;
                 trackEl.className = `track-element`;
                 this.tracksDiv.appendChild(trackEl);
-
+                console.log(`${track.name} loaded...`);
                 resolve(track);
             } catch (e) {
                 reject(e);
@@ -337,8 +334,9 @@ class AudioTrack {
         this.audioCtx = audioCtx;
         this.audioWorkletNode = audioWorkletNode;
         this.fpath = fpath;
-        this.pannerNode = this.audioCtx.createPanner();
+        this.pannerNode = this.audioCtx.createStereoPanner();
         this.gainOutNode = this.audioCtx.createGain();
+        this.name = this.fpath.split("/").pop();
         this.initWamHostPath = initWamHostPath;
         this.wamIndexPath = wamIndexPath;
     }
@@ -375,30 +373,9 @@ class AudioTrack {
         //
         // // source.connect(node).connect(audioCtx.destination);
         // connectPlugin(mainAudio.masterVolumeNode, gainNode);
-        this.pannerNode.connect(this.gainOutNode);
-        // this.gainOutNode.connect(this.audioWorkletNode);
-        this.audioWorkletNode.connect(this.gainOutNode);
+        this.audioWorkletNode.connect(this.pannerNode).connect(this.gainOutNode);
     }
 }
 
-function loadMultiTrackDir() {
-//     const path = require('path');
-//     const fs = require('fs');
-// //joining path of directory
-//     const directoryPath = path.join(__dirname, 'Documents');
-//     console.log(directoryPath);
-// //passsing directoryPath and callback function
-//     fs.readdir(directoryPath, function (err, files) {
-//         //handling error
-//         if (err) {
-//             return console.log('Unable to scan directory: ' + err);
-//         }
-//         //listing all files using forEach
-//         files.forEach(function (file) {
-//             // Do whatever you want to do with the file
-//             console.log(file);
-//         });
-//     });
-}
 
-export {MainAudio, AudioTrack, loadMultiTrackDir};
+export {MainAudio, AudioTrack};
