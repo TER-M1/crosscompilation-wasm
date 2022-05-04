@@ -28,6 +28,7 @@ var currentPluginAudioNode;
     var val;
     let mute = false;
     var intervalTimerId = undefined;
+    var intervalCursorTracks = undefined;
     btnStart.hidden = false;
     // var trackElements = $(".track.sound");
     // let t = document.getElementsByClassName("track sound");
@@ -102,6 +103,11 @@ var currentPluginAudioNode;
         mainAudio.tracks.forEach((track) => {
             if (audioCtx.state === "suspended") {
                 audioCtx.resume();
+                if (intervalCursorTracks === undefined) {
+                    intervalCursorTracks = setInterval(() => {
+                        updateCursorTracks(mainAudio);
+                    }, 33);
+                }
             }
             const playing = track.audioWorkletNode.parameters.get("playing").value;
             if (playing === 1) {
@@ -112,6 +118,11 @@ var currentPluginAudioNode;
                     intervalTimerId = undefined;
                     // console.log(intervalTimerId);
                 }
+                if (intervalCursorTracks !== undefined) {
+                    updateCursorTracks(mainAudio)
+                    clearInterval(intervalCursorTracks);
+                    intervalCursorTracks = undefined;
+                }
                 // lineDrawer.paused = true;
             } else {
                 track.audioWorkletNode.parameters.get("playing").value = 1;
@@ -120,6 +131,11 @@ var currentPluginAudioNode;
                         updateAudioTimer(mainAudio);
                         mainAudio.maxGlobalTimer -= 1.;
                     }, 1000);
+                }
+                if (intervalCursorTracks === undefined) {
+                    intervalCursorTracks = setInterval(() => {
+                        updateCursorTracks(mainAudio);
+                    }, 33);
                 }
             }
         });
