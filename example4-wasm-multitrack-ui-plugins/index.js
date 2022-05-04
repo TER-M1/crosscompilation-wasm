@@ -24,6 +24,25 @@ for (let i = 0; i < 12; i++) {
 var currentPluginAudioNode;
 
 
+/**
+ *
+ * @param{MainAudio} mainAudio
+ */
+function updateCursorTracks(mainAudio) {
+    for(let i = 0; i < mainAudio.tracks.length; i++) {
+        let playHead = mainAudio.tracks[i].audioWorkletNode.playhead;
+        let trackCanvas = mainAudio.canvas[i];
+
+        let ctx = trackCanvas.getContext("2d");
+        ctx.clearRect(0, 0, trackCanvas.width, trackCanvas.height);
+        ctx.putImageData(trackCanvas.bufferState, 0, 0)
+
+        let position = Math.ceil(playHead / trackCanvas.width);
+        ctx.fillStyle = "lightgrey";
+        ctx.fillRect(position, 0, 2, trackCanvas.height);
+    }
+}
+
 (async () => {
     var val;
     let mute = false;

@@ -108,7 +108,6 @@ class SimpleProcessor extends AudioWorkletProcessor {
                 // Play was finished
                 if (loop) {
                     this.playhead = 0; // Loop just enabled, reset playhead
-                    this.port.postMessage({playhead: this.playhead})
                 }
                 else continue; // EOF without loop
             }
@@ -126,9 +125,8 @@ class SimpleProcessor extends AudioWorkletProcessor {
                 );
             }
             this.playhead++;
-            this.port.postMessage({playhead: this.playhead})
         }
-
+        this.port.postMessage({playhead: this.playhead});
         return true;
     }
 }
