@@ -13,7 +13,6 @@ class MainAudio {
 
     constructor(audioCtx) {
         this.audioCtx = audioCtx;
-        this.canvas = [];
         this.maxGlobalTimer = 0;
         this.masterVolumeNode = audioCtx.createGain();
         this.masterVolumeNode.connect(this.audioCtx.destination);
