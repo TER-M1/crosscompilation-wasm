@@ -71,28 +71,28 @@ var currentPluginAudioNode;
     /*
     PLUGIN CONNECTION
      */
-    const {default: initializeWamHost} = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
-    const [hostGroupId] = await initializeWamHost(audioCtx);
-
-    var {default: WAM} = await import ("https://michael-marynowicz.github.io/TER/pedalboard/index.js");
-    var instance = await WAM.createInstance(hostGroupId, audioCtx);
+    // const {default: initializeWamHost} = await import("./plugins/testBern/utils/sdk/src/initializeWamHost.js");
+    // const [hostGroupId] = await initializeWamHost(audioCtx);
+    //
+    // var {default: WAM} = await import ("https://michael-marynowicz.github.io/TER/pedalboard/index.js");
+    // var instance = await WAM.createInstance(hostGroupId, audioCtx);
     // connectPlugin(audioCtx, mainAudio.tracks[0].audioWorkletNode, instance._audioNode);
-    currentPluginAudioNode = instance._audioNode;
-
-    var pluginDomModel = await instance.createGui();
+    // currentPluginAudioNode = instance._audioNode;
+    // connectPlugin(audioCtx, mainAudio.tracks[0].audioWorkletNode, mainAudio.masterVolumeNode);
+    // var pluginDomModel = await instance.createGui();
     // mountPlugin(document.querySelector("#mount2"), pluginDomModel);
 
 
     /*
     PLUGIN PARAMETERS CONNECTION
      */
-    await populateParamSelector(instance._audioNode);
-
-    pluginParamSelector.onclick = () => {
-        populateParamSelector(instance._audioNode);
-    };
-    connectPlugin(audioCtx, mainAudio.tracks[0].audioWorkletNode, mainAudio.masterVolumeNode);
-    addEventOnPlugin(currentPluginAudioNode);
+    // await populateParamSelector(instance._audioNode);
+    //
+    // pluginParamSelector.onclick = () => {
+    //     populateParamSelector(instance._audioNode);
+    // };
+    //
+    // addEventOnPlugin(currentPluginAudioNode);
 
 
     /*

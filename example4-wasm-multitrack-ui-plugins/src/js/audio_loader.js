@@ -214,14 +214,14 @@ class TrackElement extends HTMLElement {
 
     defineListeners() {
         var rangeInputSound = this.shadowRoot.querySelector("input.track.sound");
-        rangeInputSound.onchange = (e) => {
+        rangeInputSound.oninput = (e) => {
             let val;
             val = rangeInputSound.value;
             this.track.gainOutNode.gain.value = val;
         };
 
         var rangeInputBalance = this.shadowRoot.querySelector("input.track.balance");
-        rangeInputBalance.onchange = (e) => {
+        rangeInputBalance.oninput = (e) => {
             this.track.pannerNode.pan.value = rangeInputBalance.value;
         };
     }
