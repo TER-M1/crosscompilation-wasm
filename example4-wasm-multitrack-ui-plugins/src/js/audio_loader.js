@@ -52,20 +52,61 @@ class MainAudio {
 
     removeTrack(track) {
         track.audioWorkletNode.disconnect();
-        console.log(this.tracks)
-        this.tracks = this.tracks.filter(function (ele) {
+        this.tracks = this.tracks.filter( (ele) => {
             return ele !== track;
+        });
+    }
+
+    soloTrack(track) {
+        for (let i = 0; i < this.tracks.length; i++) {
+            if (track === this.tracks[i]) {
+                track.setVolume(track.oldGainValue);
+            } else {
+                this.tracks[i].setSoloTrack(false);
+                this.tracks[i].setVolume(0);
+                document.querySelector(`#track${this.tracks[i].id}`).shadowRoot.querySelector(".item.tool.solo").style.color = null;
+            }
+        }
+    }
+
+    unSoloTracks() {
+        this.tracks.forEach((track) => {
+            track.setVolume(track.oldGainValue);
+            track.setSoloTrack(false);
         });
     }
 }
 
 
 class AudioTrack {
+    /**
+     *
+     * @type {OperableAudioBuffer}
+     */
     operableDecodedAudioBuffer = undefined;
+    /**
+     *
+     * @type {AudioBuffer}
+     */
     decodedAudioBuffer = undefined;
+    /**
+     *
+     * @type {Number}
+     */
     duration = undefined;
+    /**
+     *
+     * @type {boolean}
+     * @private
+     */
     _isMuted = false;
     canvas = undefined;
+    /**
+     *
+     * @type {boolean}
+     * @private
+     */
+    _isSoloTrack = false;
 
     /**
      *
@@ -115,9 +156,27 @@ class AudioTrack {
         this._isMuted = false;
     }
 
+    isSoloTrack() {
+        return this._isSoloTrack;
+    }
+
+    /**
+     *
+     * @param{Boolean} value
+     */
+    setSoloTrack(value) {
+        this._isSoloTrack = value;
+    }
+
+    /**
+     *
+     * @param{Number} value
+     */
     setVolume(value) {
         this.gainOutNode.gain.value = value;
     }
+
+
 }
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -324,6 +383,7 @@ class TrackElement extends HTMLElement {
         this.fixTrackNumber();
         this.defineListeners();
         this.defineRemoveTrack();
+        this.soloTrackListeners();
     }
 
     disconnectedCallback() {
@@ -372,17 +432,26 @@ class TrackElement extends HTMLElement {
     }
 
     defineRemoveTrack() {
-        // let removeButton = this.shadowRoot.querySelector(".red.icon");
-        // this.shadowRoot.querySelector(".item.tool.close").onclick = () => {
-        //     console.log("should remove the track");
-        //     this.track.audioWorkletNode.disconnect();
-        //     document.querySelector(`.wave-form.track${this.id}`).remove();
-        //     this.remove();
-        // }
         this.shadowRoot.querySelector(".item.tool.close").onclick = () => {
             document.querySelector(`.wave-form.track${this.track.id}`).remove();
             this.remove();
             mainAudio.removeTrack(this.track);
+        }
+    }
+
+    soloTrackListeners() {
+        let soloTrack = this.shadowRoot.querySelector(".item.tool.solo");
+        soloTrack.onclick = () => {
+            soloTrack.style.color = "lime";
+            if (this.track.isSoloTrack()) {
+                this.track.setSoloTrack(false);
+                soloTrack.style.color = null;
+                mainAudio.unSoloTracks();
+            } else {
+                this.track.setSoloTrack(true);
+                mainAudio.soloTrack(this.track);
+            }
+
         }
     }
 }
@@ -405,7 +474,6 @@ class WaveForm extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({mode: "open"});
-        // this.className = "wave-form"
     }
 
 
