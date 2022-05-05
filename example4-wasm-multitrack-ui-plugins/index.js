@@ -18,7 +18,6 @@ const inputMute = document.getElementById("mute");
 
 var currentPluginAudioNode;
 
-
 /**
  *
  * @param{MainAudio} mainAudio

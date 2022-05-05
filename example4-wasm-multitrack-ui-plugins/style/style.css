@@ -248,3 +248,6 @@ i.icon {
 .pluginAutomationParamId{
     color: white;
 }
+.ui.dropdown .menu:hover {
+    display: block;
+}

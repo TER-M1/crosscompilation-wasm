@@ -5,8 +5,7 @@ import {drawBuffer} from "./drawers.js";
 const template = document.createElement("template");
 template.innerHTML = /*html*/`
 
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
-<script src="../../lib/semantic.min.js"></script>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fomantic-ui@2.8.8/dist/components/icon.min.css">
 <link rel="stylesheet" href="../../lib/semantic.min.css" type="text/css">
 
@@ -168,7 +167,11 @@ i.icon {
             <i class="mute-icon">S</i>
         </a>
         <a class="item tool">
-            <i class="project diagram icon"></i>
+            <div class="ui icon top left pointing dropdown button" id="automat">
+                                  <i class="project diagram icon"></i>
+                                    <div class="menu" name="pluginParamSelectorDrop" id="pluginParamSelectorDrop" >
+                                    </div>
+                                  </div>
         </a>
     </div>
 </div>
@@ -179,6 +182,7 @@ i.icon {
 
 class TrackElement extends HTMLElement {
     track = undefined;
+
     /**
      *
      * @param {AudioTrack} track
@@ -187,18 +191,33 @@ class TrackElement extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({mode: "open"});
+        this.defineScripts();
     }
 
 
     connectedCallback() {
-        this.shadowRoot.innerHTML = template.innerHTML;
+        this.shadowRoot.innerHTML = this.shadowRoot.innerHTML  + template.innerHTML;
         this.fixTrackNumber();
         this.defineListeners();
         this.defineRemoveTrack();
+        this.defineAutomation();
+
     }
 
     disconnectedCallback() {
 
+    }
+    defineScripts(){
+        const s = document.createElement('script');
+        s.src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js";
+        const s2 = document.createElement('script');
+        s2.src="../../lib/semantic.min.js";
+        const s3 = document.createElement("script");
+        s3.textContent = (console.log("hello shadow"));
+        this.shadowRoot.appendChild(s);
+        this.shadowRoot.appendChild(s2);
+        this.shadowRoot.appendChild(s3);
+        console.log(s)
     }
 
     fixTrackNumber() {
@@ -232,6 +251,10 @@ class TrackElement extends HTMLElement {
             console.log("should remove the track");
         }
     }
+    defineAutomation(){
+        $(".dropdown").dropdown({
+        })
+    }
 }
 
 customElements.define(
@@ -251,6 +274,7 @@ templateCanvas.innerHTML = /*html*/`
 class waveForm extends HTMLElement {
     id = undefined;
     canvas = undefined;
+
     constructor() {
         super();
         this.attachShadow({mode: "open"});
@@ -267,11 +291,13 @@ class waveForm extends HTMLElement {
     disconnectedCallback() {
 
     }
-    defClass(){
+
+    defClass() {
         console.log("wave-form defined")
-        this.className="wave-form"
+        this.className = "wave-form"
     }
-    defId(){
+
+    defId() {
         this.canvas = this.shadowRoot.querySelector(".can");
         this.canvas.id = this.id;
     }
@@ -294,7 +320,7 @@ export class SimpleAudioWorkletNode extends AudioWorkletNode {
     constructor(context) {
         super(context, "simple-processor");
         this.port.onmessage = (e) => {
-            if(e.data.playhead) {
+            if (e.data.playhead) {
                 this.playhead = e.data.playhead;
             }
         }
@@ -344,7 +370,7 @@ class MainAudio {
                 this.tracks.push(track);
 
                 let waveForm = document.createElement("wave-form");
-                waveForm.id = "track"+(this.tracks.length - 1);
+                waveForm.id = "track" + (this.tracks.length - 1);
                 this.CanvasDiv.appendChild(waveForm);
 
                 let trackCanvas = waveForm.canvas;
