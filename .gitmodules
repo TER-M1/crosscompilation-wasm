@@ -1,0 +1,3 @@
+[submodule "wam-openstudio"]
+	path = wam-openstudio
+	url = https://github.com/TER-M1/wam-openstudio
