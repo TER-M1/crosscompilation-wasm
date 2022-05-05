@@ -26,13 +26,10 @@ class Selector {
                     toRemoveSelectionCanvas.className = this.waveformClass +' '+  toRemoveSelectionCanvas.id};
                 elem.className += this.selectClass;
                 document.querySelector('.'+elem.id).className += this.selectClass;
-
                 this.selectedTrack = this.getTrack(idTrack);
-                console.log(this.selectedTrack)
             }
         })
         this.handlersCanvas();
-        console.log(tracks)
     }
 
 
@@ -78,7 +75,6 @@ function scrollSync(selector) {
     let active = null;
     console.log(document.querySelectorAll(selector));
     document.querySelectorAll(selector).forEach(function(element) {
-        console.log("SYNC !")
         element.addEventListener("mouseenter", function(e) {
             active = e.target;
         });
