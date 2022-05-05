@@ -7,13 +7,28 @@ class MainAudio {
      * @type {[AudioTrack]}
      */
     tracks = [];
+    /**
+     *
+     * @type {boolean}
+     * @private
+     */
+    _isMasterMuted = false;
+    /**
+     *
+     * @type {Element}
+     */
     tracksDiv = document.querySelector(".tools-tracks");
+    /**
+     *
+     * @type {Element}
+     */
     canvasDiv = document.querySelector(".audio-tracks");
 
     constructor(audioCtx) {
         this.audioCtx = audioCtx;
         this.maxGlobalTimer = 0;
         this.masterVolumeNode = audioCtx.createGain();
+        this.oldMasterVolume = this.masterVolumeNode.gain.value;
         this.masterVolumeNode.connect(this.audioCtx.destination);
     }
 
@@ -32,7 +47,7 @@ class MainAudio {
 
 
                 track.canvas = waveForm.canvas;
-                track.canvas.width = 4000;
+                track.canvas.width = 2000;
                 track.canvas.height = 99;
                 drawBuffer(track.canvas, track.decodedAudioBuffer, "#" + Math.floor(Math.random() * 16777215).toString(16));
 
@@ -51,6 +66,8 @@ class MainAudio {
 
     removeTrack(track) {
         track.audioWorkletNode.disconnect();
+        delete track.decodedAudioBuffer;
+        delete track.operableDecodedAudioBuffer;
         this.tracks = this.tracks.filter( (ele) => {
             return ele !== track;
         });
@@ -73,6 +90,56 @@ class MainAudio {
             track.setVolume(track.oldGainValue);
             track.setSoloTrack(false);
         });
+    }
+
+    /**
+     *
+     * @param{Number} value
+     */
+    setVolume(value) {
+        this.masterVolumeNode.gain.value = value;
+    }
+
+    mute() {
+        this._isMasterMuted = true;
+        this.setVolume(0);
+    }
+
+    unMute() {
+        this._isMasterMuted = false;
+        this.setVolume(this.prevStateVolume);
+    }
+
+    /**
+     *
+     * @returns {boolean}
+     */
+    get isMuted() {
+        return this._isMasterMuted;
+    }
+
+    /**
+     *
+     * @returns {number}
+     */
+    get volume() {
+        return this.masterVolumeNode.gain.value;
+    }
+
+    /**
+     *
+     * @param{number} value
+     */
+    saveStateVolume(value) {
+        this.oldMasterVolume = value;
+    }
+
+    /**
+     *
+     * @returns {Number}
+     */
+    get prevStateVolume() {
+        return this.oldMasterVolume;
     }
 }
 
@@ -99,6 +166,10 @@ class AudioTrack {
      * @private
      */
     _isMuted = false;
+    /**
+     *
+     * @type {Element}
+     */
     canvas = undefined;
     /**
      *
@@ -139,10 +210,11 @@ class AudioTrack {
             OperableAudioBuffer.prototype
         );
         this.audioWorkletNode.setAudio(this.operableDecodedAudioBuffer.toArray());
+        //TODO connect plugin entre audio worlket et panner node
         this.audioWorkletNode.connect(this.pannerNode).connect(this.gainOutNode);
     }
 
-    isMuted() {
+    get isMuted() {
         return this._isMuted;
     }
 
@@ -155,7 +227,7 @@ class AudioTrack {
         this._isMuted = false;
     }
 
-    isSoloTrack() {
+    get isSoloTrack() {
         return this._isSoloTrack;
     }
 
@@ -173,6 +245,14 @@ class AudioTrack {
      */
     setVolume(value) {
         this.gainOutNode.gain.value = value;
+    }
+
+    /**
+     *
+     * @param{number} value
+     */
+    saveStateVolume(value) {
+        this.oldGainValue = value;
     }
 
 
@@ -314,9 +394,9 @@ i.icon {
         <a class="item tool solo">
             <i class="mute-icon">S</i>
         </a>
-        <a class="item tool">
-            <i class="project diagram icon"></i>
-        </a>
+<!--        <a class="item tool">-->
+<!--            <i class="project diagram icon"></i>-->
+<!--        </a>-->
     </div>
 </div>
 <div class="track-element-color"></div>
@@ -363,7 +443,7 @@ class TrackElement extends HTMLElement {
     defineListeners() {
         const rangeInputSound = this.shadowRoot.querySelector("input.track.sound");
         rangeInputSound.oninput = (e) => {
-            if (!this.track.isMuted()) {
+            if (!this.track.isMuted) {
                 this.track.setVolume(rangeInputSound.value);
             }
             this.track.oldGainValue = rangeInputSound.value;
@@ -377,7 +457,7 @@ class TrackElement extends HTMLElement {
         const muteTrack = this.shadowRoot.querySelector(".item.tool.mute");
 
         muteTrack.onclick = () => {
-            if (this.track.isMuted()) {
+            if (this.track.isMuted) {
                 muteTrack.style.color = null;
                 this.track.gainOutNode.gain.value = this.track.oldGainValue;
                 this.track.setVolume(this.track.oldGainValue);
@@ -402,7 +482,7 @@ class TrackElement extends HTMLElement {
         let soloTrack = this.shadowRoot.querySelector(".item.tool.solo");
         soloTrack.onclick = () => {
             soloTrack.style.color = "lime";
-            if (this.track.isSoloTrack()) {
+            if (this.track.isSoloTrack) {
                 this.track.setSoloTrack(false);
                 soloTrack.style.color = null;
                 mainAudio.unSoloTracks();
@@ -466,7 +546,12 @@ customElements.define(
 
 
 export class SimpleAudioWorkletNode extends AudioWorkletNode {
-    playhead = 0;
+    /**
+     *
+     * @type {number}
+     * @private
+     */
+    _playhead = 0;
 
     /**
      * @param {BaseAudioContext} context
@@ -475,7 +560,7 @@ export class SimpleAudioWorkletNode extends AudioWorkletNode {
         super(context, "simple-processor");
         this.port.onmessage = (e) => {
             if (e.data.playhead) {
-                this.playhead = e.data.playhead;
+                this._playhead = e.data.playhead;
             }
         }
     }
@@ -485,8 +570,12 @@ export class SimpleAudioWorkletNode extends AudioWorkletNode {
         this.port.postMessage({position});
     }
 
-    getPlayheadPosition() {
-        return playhead;
+    /**
+     *
+     * @returns {number}
+     */
+    get playHeadPosition() {
+        return this._playhead;
     }
 
     /**

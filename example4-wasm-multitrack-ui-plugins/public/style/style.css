@@ -258,3 +258,10 @@ i.icon {
 .pluginAutomationParamId{
     color: white;
 }
+.mySelected {
+   /*background-color: grey;*/
+   /* border-color: grey;*/
+    border: 1px solid lightgrey;
+
+
+}

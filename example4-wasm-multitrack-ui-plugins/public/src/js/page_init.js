@@ -1,20 +1,21 @@
 import {audioCtx, AudioTrack, mainAudio, SimpleAudioWorkletNode} from "./audio_loader.js";
 
 export function activateMainVolume(mainAudio, val) {
+    mainAudio.setVolume(val);
+    mainAudio.saveStateVolume(val);
     $('.master').slider({
-        start: 50,
-        value: 50,
+        start: 20,
+        value: 20,
         range: 'max',
         min: 0,
         max: 100,
         smooth: true,
         onMove: function (value) {
-            console.log('master volume at ' + value)
-            val = value / 100;
-            // mainAudio.tracks.forEach((track) => {
-            //     track.gainOutNode.value = val;
-            //     });
-            mainAudio.masterVolumeNode.gain.value = val;
+            let val = value / 100;
+            if (!mainAudio.isMuted) {
+                mainAudio.setVolume(val);
+            }
+            mainAudio.saveStateVolume(val);
         }
     });
 }
