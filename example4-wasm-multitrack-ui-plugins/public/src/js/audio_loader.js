@@ -355,9 +355,9 @@ i.icon {
         <a class="item tool solo">
             <i class="mute-icon">S</i>
         </a>
-        <a class="item tool">
-            <i class="project diagram icon"></i>
-        </a>
+<!--        <a class="item tool">-->
+<!--            <i class="project diagram icon"></i>-->
+<!--        </a>-->
     </div>
 </div>
 <div class="track-element-color"></div>
