@@ -2,6 +2,7 @@ import {MainAudio, AudioTrack, SimpleAudioWorkletNode, audioCtx, mainAudio} from
 import {activateMainVolume, exploreTracks} from "./src/js/page_init.js";
 import {updateCursorTracks} from "./src/js/playhead.js";
 
+import {Selector} from "./src/js/control.js";
 
 
 const btnStart = document.getElementById("btn-start");
@@ -144,4 +145,5 @@ var intervalCursorTracks = undefined;
             mainAudio.unMute();
         }
     };
+    const selector = new Selector(mainAudio.tracks);
 })();
