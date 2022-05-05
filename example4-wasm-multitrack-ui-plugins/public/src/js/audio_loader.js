@@ -140,6 +140,7 @@ class AudioTrack {
             OperableAudioBuffer.prototype
         );
         this.audioWorkletNode.setAudio(this.operableDecodedAudioBuffer.toArray());
+        //TODO connect plugin entre audio worlket et panner node
         this.audioWorkletNode.connect(this.pannerNode).connect(this.gainOutNode);
     }
 
