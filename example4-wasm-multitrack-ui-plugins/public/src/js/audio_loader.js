@@ -1,7 +1,6 @@
 import OperableAudioBuffer from './operable-audio-buffer.js'
 import {drawBuffer} from "./drawers.js";
 
-
 class MainAudio {
     /**
      *
@@ -108,20 +107,20 @@ class AudioTrack {
      */
     _isSoloTrack = false;
 
+    id = undefined;
+
     /**
      *
      * @param{AudioContext} audioCtx
      * @param{AudioWorkletNode} audioWorkletNode
      * @param{String} fpath
-     * @param{Number} id
      * @param initWamHostPath
      * @param wamIndexPath
      */
-    constructor(audioCtx, audioWorkletNode, fpath, id, initWamHostPath = "", wamIndexPath = "") {
+    constructor(audioCtx, audioWorkletNode, fpath, initWamHostPath = "", wamIndexPath = "") {
         this.audioCtx = audioCtx;
         this.audioWorkletNode = audioWorkletNode;
         this.fpath = fpath;
-        this.id = id;
         this.pannerNode = this.audioCtx.createStereoPanner();
         this.gainOutNode = this.audioCtx.createGain();
         this.oldGainValue = this.gainOutNode.gain.value;
@@ -195,39 +194,6 @@ template.innerHTML = /*html*/`
 
 <style>
 
-.tracks {
-    margin-top: 1.9em;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    height: 100%;
-    background-color: #1C1E21;
-}
-
-.tools-tracks {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    background-color: #1C1E21;
-    /*border: 1px solid black;*/
-    /*border-top: none;*/
-    /*border-bottom: none;*/
-    font-family: monospace;
-    font-weight: bold;
-    font-size: 1em;
-    color: lightgray;
-    overflow: scroll;
-    min-width: 192px;
-}
-.track-element {
-    border: 1px solid black;
-    min-height: 100px;
-    width: 180px;
-    background-color: #31353A;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-}
 .track-element-color {
     flex-grow: 3;
     background-color: greenyellow;
@@ -285,13 +251,6 @@ a.item.tool.mute:link {
     text-decoration: inherit;
     color: inherit;
     cursor: auto;
-}
-
-.ui.inverted.grey.slider.track {
-    padding-top: 0.2em !important;
-    padding-bottom: 0.2em !important;
-    padding-left: 1em !important;
-    padding-right: 1em !important;
 }
 
 .track-controls {

@@ -20,23 +20,16 @@ function scrollSync(selector) {
     });
 }
 
+function overflowDetection(selector) {
+    let el = document.querySelectorAll(selector);
+    if (!el) return;
+    var isOverflow = el.style.overflow;
+
+}
+
+
 scrollSync(".scroll-sync");
 
-$('.ui.dropdown').dropdown({
-    values: [
-        {
-            name: 'Male',
-            value: 'path1',
-            class: 'item soundM'
-        },
-        {
-            name: 'Female',
-            value: 'path2',
-            class: 'item soundM'
-        },
-        {
-            name:  'test',
-            class: 'item soundM'
-        }
-    ]
+$('.ui.dropdown.settings-menu').dropdown({
+    action: 'hide',
 });

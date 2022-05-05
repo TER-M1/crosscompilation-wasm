@@ -4,7 +4,6 @@ import {updateAudioTimer} from "./src/js/timer.js";
 import {activateMainVolume, exploreTracks} from "./src/js/page_init.js";
 
 
-
 const btnStart = document.getElementById("btn-start");
 const zoomIn = document.getElementById("btn-zoom-in");
 const zoomOut = document.getElementById("btn-zoom-out");
@@ -59,34 +58,6 @@ function updateCursorTracks(track) {
     updateAudioTimer(mainAudio);
     activateMainVolume(mainAudio, val);
     exploreTracks();
-
-    /*
-    MULTI TRACKS INITIALZATION
-     */
-    let asyncAddTrack = [
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/bass.wav")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/drums.wav")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/other.wav")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/vocals.wav")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3"))
-    ]
-    let res = await Promise.all(
-        asyncAddTrack
-    )
-    console.log(res);
-    console.log(mainAudio.tracks);
-    console.log(mainAudio.maxGlobalTimer);
 
 
     /*

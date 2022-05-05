@@ -3,7 +3,10 @@ const path = require('path');
 const fs = require('fs');
 
 const PORT = 80;
-const TRACK_PATH = './public/song/multitrack'
+const TRACK_PATH = './public/song/multitrack';
+const LOCAL_TRACK_PATH = './song/multitrack';
+
+let tracks = {};
 
 const app = express();
 
@@ -11,11 +14,22 @@ app.use(express.static('public'));
 
 app.listen(PORT, () => console.log("Server is started and listening on port 80."));
 
-app.get('/track', (req, res) => {
+/*
+ROUTING
+ */
+app.get('/track', async (req, res) => {
     res.writeHead(200, {"Content-Type": "application/json"});
-    res.write(JSON.stringify(exploreMultiTracks()));
+    exploreMultiTracks();
+    res.write(JSON.stringify(tracks));
     res.end();
 });
+
+app.get('/track/:id', async (req, res) => {
+    const id = req.params.id;
+    res.writeHead(200, {"Content-Type": "application/json"});
+    res.write(JSON.stringify(getMutliTrackById(id)));
+    res.end();
+} )
 
 const endsWith = (str, suffix) => str.indexOf(suffix, str.length - suffix.length) !== -1;
 
@@ -28,16 +42,18 @@ function isASoundFile(fileName) {
 
 
 function exploreMultiTracks() {
+    tracks = {"tracks": []};
     const directoryPath = TRACK_PATH;
-    const tracks = {"tracks": []};
 
     //passsing directoryPath and callback function
     var files = fs.readdirSync(directoryPath)
+    let i = 0;
     files.forEach((file) => {
         var soundList = fs.readdirSync(`${directoryPath}/${file}`)
         const track = {
+            id: i,
             trackname: file,
-            path: `${directoryPath}/${file}`,
+            path: `${LOCAL_TRACK_PATH}/${file}`,
             soundList: soundList
                 .filter(sound => isASoundFile(sound))
                 .map(sound => ({
@@ -45,8 +61,18 @@ function exploreMultiTracks() {
                 }))
         }
         tracks.tracks.push(track);
+        i++;
     })
-
-    return tracks
 }
 
+function getMutliTrackById(id) {
+    let res = {};
+    tracks.tracks.forEach(track => {
+        if (String(track.id) === id) {
+            res = track;
+        }
+    })
+    return res;
+}
+
+exploreMultiTracks();
