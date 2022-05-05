@@ -1,12 +1,9 @@
-import {MainAudio, AudioTrack, SimpleAudioWorkletNode} from "./src/js/audio_loader.js";
+import {MainAudio, AudioTrack, SimpleAudioWorkletNode, audioCtx, mainAudio} from "./src/js/audio_loader.js";
 import {connectPlugin, mountPlugin, addEventOnPlugin, populateParamSelector} from "./src/js/plugin_parameters.js";
 import {updateAudioTimer} from "./src/js/timer.js";
 import {activateMainVolume, exploreTracks} from "./src/js/page_init.js";
 
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-if (audioCtx.state === "suspended") {
-    audioCtx.resume();
-}
+
 
 const btnStart = document.getElementById("btn-start");
 const zoomIn = document.getElementById("btn-zoom-in");
@@ -16,11 +13,6 @@ const inputLoop = document.getElementById("loop");
 const volumeinput = document.getElementById("volume");
 const inputMute = document.getElementById("mute");
 
-var canvas = [];
-for (let i = 0; i < 12; i++) {
-    canvas.push(document.getElementById(`track${i}`));
-}
-
 var currentPluginAudioNode;
 
 
@@ -28,16 +20,18 @@ var currentPluginAudioNode;
  *
  * @param{MainAudio} mainAudio
  */
-function updateCursorTracks(mainAudio) {
+function updateCursorTracks(track) {
     for(let i = 0; i < mainAudio.tracks.length; i++) {
         let playHead = mainAudio.tracks[i].audioWorkletNode.playhead;
-        let trackCanvas = mainAudio.canvas[i];
+        let trackCanvas = mainAudio.tracks[i].canvas;
 
         let ctx = trackCanvas.getContext("2d");
         ctx.clearRect(0, 0, trackCanvas.width, trackCanvas.height);
-        ctx.putImageData(trackCanvas.bufferState, 0, 0)
+        ctx.putImageData(trackCanvas.bufferState, 0, 0);
 
-        let position = Math.ceil(playHead / trackCanvas.width);
+        let rapport = (playHead * 100) / mainAudio.tracks[i].operableDecodedAudioBuffer.length;
+        let position = (trackCanvas.width / 100) * rapport;
+
         ctx.fillStyle = "lightgrey";
         ctx.fillRect(position, 0, 2, trackCanvas.height);
     }
@@ -57,7 +51,7 @@ function updateCursorTracks(mainAudio) {
     PROCESSOR INITIALIZATION
      */
     await audioCtx.audioWorklet.addModule("./src/js/processor.js");
-    let mainAudio = new MainAudio(audioCtx, canvas);
+
 
     /*
     INITIALIZATION PAGES ELEMENTS
@@ -77,7 +71,9 @@ function updateCursorTracks(mainAudio) {
         mainAudio.addTrack(
             new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/other.wav")),
         mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/vocals.wav"))
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/vocals.wav")),
+        mainAudio.addTrack(
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3"))
     ]
     let res = await Promise.all(
         asyncAddTrack
