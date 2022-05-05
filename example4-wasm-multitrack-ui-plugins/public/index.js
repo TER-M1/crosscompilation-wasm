@@ -73,6 +73,12 @@ function updateCursorTracks(track) {
         mainAudio.addTrack(
             new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/vocals.wav")),
         mainAudio.addTrack(
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
+        mainAudio.addTrack(
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
+        mainAudio.addTrack(
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
+        mainAudio.addTrack(
             new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3"))
     ]
     let res = await Promise.all(
