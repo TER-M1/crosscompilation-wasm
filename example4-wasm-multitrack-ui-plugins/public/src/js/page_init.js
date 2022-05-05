@@ -1,19 +1,19 @@
 export function activateMainVolume(mainAudio, val) {
-    let masterV = $('.master');
+    mainAudio.setVolume(val);
+    mainAudio.saveStateVolume(val);
     $('.master').slider({
-        start: 50,
-        value: 50,
+        start: 20,
+        value: 20,
         range: 'max',
         min: 0,
         max: 100,
         smooth: true,
         onMove: function (value) {
-            console.log('master volume at ' + value)
-            val = value / 100;
-            // mainAudio.tracks.forEach((track) => {
-            //     track.gainOutNode.value = val;
-            //     });
-            mainAudio.masterVolumeNode.gain.value = val;
+            let val = value / 100;
+            if (!mainAudio.isMuted) {
+                mainAudio.setVolume(val);
+            }
+            mainAudio.saveStateVolume(val);
         }
     });
 }
