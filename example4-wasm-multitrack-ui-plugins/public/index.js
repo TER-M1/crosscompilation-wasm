@@ -2,7 +2,7 @@ import {MainAudio, AudioTrack, SimpleAudioWorkletNode, audioCtx, mainAudio} from
 import {connectPlugin, mountPlugin, addEventOnPlugin, populateParamSelector} from "./src/js/plugin_parameters.js";
 import {updateAudioTimer} from "./src/js/timer.js";
 import {activateMainVolume, exploreTracks} from "./src/js/page_init.js";
-
+import {Selector} from "./src/js/control.js";
 
 
 const btnStart = document.getElementById("btn-start");
@@ -14,6 +14,7 @@ const volumeinput = document.getElementById("volume");
 const inputMute = document.getElementById("mute");
 
 var currentPluginAudioNode;
+
 
 
 /**
@@ -193,4 +194,5 @@ function updateCursorTracks(track) {
             mute = false;
         }
     };
+    const selector = new Selector(mainAudio.tracks);
 })();

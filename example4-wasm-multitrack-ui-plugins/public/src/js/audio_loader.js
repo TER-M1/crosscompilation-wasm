@@ -140,6 +140,7 @@ class AudioTrack {
             OperableAudioBuffer.prototype
         );
         this.audioWorkletNode.setAudio(this.operableDecodedAudioBuffer.toArray());
+        //TODO connect plugin entre audio worlket et panner node
         this.audioWorkletNode.connect(this.pannerNode).connect(this.gainOutNode);
     }
 
@@ -355,9 +356,9 @@ i.icon {
         <a class="item tool solo">
             <i class="mute-icon">S</i>
         </a>
-        <a class="item tool">
-            <i class="project diagram icon"></i>
-        </a>
+<!--        <a class="item tool">-->
+<!--            <i class="project diagram icon"></i>-->
+<!--        </a>-->
     </div>
 </div>
 <div class="track-element-color"></div>
