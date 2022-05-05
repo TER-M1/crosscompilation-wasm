@@ -1,7 +1,6 @@
 import {MainAudio, AudioTrack, SimpleAudioWorkletNode, audioCtx, mainAudio} from "./src/js/audio_loader.js";
-import {connectPlugin, mountPlugin, addEventOnPlugin, populateParamSelector} from "./src/js/plugin_parameters.js";
-import {updateAudioTimer} from "./src/js/timer.js";
 import {activateMainVolume, exploreTracks} from "./src/js/page_init.js";
+import {updateCursorTracks} from "./src/js/playhead.js";
 
 
 
@@ -12,36 +11,12 @@ const btnRestart = document.getElementById("restart");
 const inputLoop = document.getElementById("loop");
 const volumeinput = document.getElementById("volume");
 const inputMute = document.getElementById("mute");
-
+const startVolume = 20 / 100;
 var currentPluginAudioNode;
+var intervalCursorTracks = undefined;
 
-
-/**
- *
- * @param{MainAudio} mainAudio
- */
-function updateCursorTracks(track) {
-    for(let i = 0; i < mainAudio.tracks.length; i++) {
-        let playHead = mainAudio.tracks[i].audioWorkletNode.playhead;
-        let trackCanvas = mainAudio.tracks[i].canvas;
-
-        let ctx = trackCanvas.getContext("2d");
-        ctx.clearRect(0, 0, trackCanvas.width, trackCanvas.height);
-        ctx.putImageData(trackCanvas.bufferState, 0, 0);
-
-        let rapport = (playHead * 100) / mainAudio.tracks[i].operableDecodedAudioBuffer.length;
-        let position = (trackCanvas.width / 100) * rapport;
-
-        ctx.fillStyle = "lightgrey";
-        ctx.fillRect(position, 0, 2, trackCanvas.height);
-    }
-}
 
 (async () => {
-    var val;
-    let mute = false;
-    var intervalTimerId = undefined;
-    var intervalCursorTracks = undefined;
     btnStart.hidden = false;
     // var trackElements = $(".track.sound");
     // let t = document.getElementsByClassName("track sound");
@@ -56,14 +31,15 @@ function updateCursorTracks(track) {
     /*
     INITIALIZATION PAGES ELEMENTS
      */
-    updateAudioTimer(mainAudio);
-    activateMainVolume(mainAudio, val);
+    activateMainVolume(mainAudio, startVolume);
     exploreTracks();
 
     /*
     MULTI TRACKS INITIALZATION
      */
     let asyncAddTrack = [
+        mainAudio.addTrack(
+            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
         mainAudio.addTrack(
             new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/bass.wav")),
         mainAudio.addTrack(
@@ -72,14 +48,6 @@ function updateCursorTracks(track) {
             new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/other.wav")),
         mainAudio.addTrack(
             new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/vocals.wav")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3"))
     ]
     let res = await Promise.all(
         asyncAddTrack
@@ -125,36 +93,24 @@ function updateCursorTracks(track) {
                 audioCtx.resume();
                 if (intervalCursorTracks === undefined) {
                     intervalCursorTracks = setInterval(() => {
-                        updateCursorTracks(mainAudio);
+                        updateCursorTracks();
                     }, 33);
                 }
             }
             const playing = track.audioWorkletNode.parameters.get("playing").value;
             if (playing === 1) {
                 track.audioWorkletNode.parameters.get("playing").value = 0;
-                console.log(intervalTimerId);
-                if (intervalTimerId !== undefined) {
-                    clearInterval(intervalTimerId);
-                    intervalTimerId = undefined;
-                    // console.log(intervalTimerId);
-                }
                 if (intervalCursorTracks !== undefined) {
-                    updateCursorTracks(mainAudio)
+                    updateCursorTracks();
                     clearInterval(intervalCursorTracks);
                     intervalCursorTracks = undefined;
                 }
                 // lineDrawer.paused = true;
             } else {
                 track.audioWorkletNode.parameters.get("playing").value = 1;
-                if (intervalTimerId === undefined) {
-                    intervalTimerId = setInterval(() => {
-                        updateAudioTimer(mainAudio);
-                        mainAudio.maxGlobalTimer -= 1.;
-                    }, 1000);
-                }
                 if (intervalCursorTracks === undefined) {
                     intervalCursorTracks = setInterval(() => {
-                        updateCursorTracks(mainAudio);
+                        updateCursorTracks();
                     }, 33);
                 }
             }
@@ -176,21 +132,16 @@ function updateCursorTracks(track) {
     };
 
     inputMute.onclick = () => {
-        if (!mute) {
+        if (!mainAudio.isMuted) {
             console.log("mute");
             // mainAudio.tracks.forEach((track) => {
             // track.gainOutNode.value = 0;
             // });
 
-            mainAudio.masterVolumeNode.gain.value = 0;
-            mute = true;
+            mainAudio.mute();
         } else {
             console.log("unmute");
-            mainAudio.masterVolumeNode.gain.value = val;
-            // mainAudio.tracks.forEach((track) => {
-            //     track.gainOutNode.value = val;
-            //     });
-            mute = false;
+            mainAudio.unMute();
         }
     };
 })();

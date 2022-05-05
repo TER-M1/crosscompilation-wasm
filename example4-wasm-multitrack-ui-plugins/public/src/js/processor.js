@@ -5,6 +5,8 @@ import {
     HeapAudioBuffer,
 } from "../../lib/wasm-audio-helper.js";
 
+const sampleRate = 48000;
+
 class SimpleProcessor extends AudioWorkletProcessor {
     /** @type {AudioParamDescriptor[]} */
     static get parameterDescriptors() {
@@ -34,7 +36,7 @@ class SimpleProcessor extends AudioWorkletProcessor {
             if (e.data.audio) {
                 this.audio = e.data.audio;
             } else if (typeof e.data.position === "number") {
-                this.playhead = e.data.position * 44100;
+                this.playhead = e.data.position * sampleRate;
                 this.port.postMessage({playhead: this.playhead})
             }
         };
@@ -108,8 +110,7 @@ class SimpleProcessor extends AudioWorkletProcessor {
                 // Play was finished
                 if (loop) {
                     this.playhead = 0; // Loop just enabled, reset playhead
-                }
-                else continue; // EOF without loop
+                } else continue; // EOF without loop
             }
 
             // Process the block
