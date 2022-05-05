@@ -1,4 +1,5 @@
 import {audioCtx, AudioTrack, mainAudio, SimpleAudioWorkletNode} from "./audio_loader.js";
+import {Selector} from "./control.js";
 
 export function activateMainVolume(mainAudio, val) {
     mainAudio.setVolume(val);
@@ -37,6 +38,7 @@ export function exploreTracks() {
                 values: values
             });
             attachControl(values);
+            const selector = new Selector(mainAudio.tracks);
         })
         .catch(err => console.log(err));
 }
@@ -49,11 +51,9 @@ function attachControl(values) {
             fetch('http://localhost:80/track/'+value.value)
                 .then(res => res.json())
                 .then(async (output) => {
-                    console.log(output);
                     let soundList = output.soundList;
                     for (let i = 0; i < soundList.length; i++) {
                         let path = `${output.path}/${soundList[i].name}`
-                        console.log(path);
                         asyncAddTrack.push(mainAudio.addTrack(
                             new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), path)
                         ));

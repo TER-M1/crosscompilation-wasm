@@ -122,5 +122,5 @@ var intervalCursorTracks = undefined;
             mainAudio.unMute();
         }
     };
-    const selector = new Selector(mainAudio.tracks);
+
 })();

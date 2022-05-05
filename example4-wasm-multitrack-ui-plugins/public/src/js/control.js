@@ -73,7 +73,6 @@ class Selector {
 
 function scrollSync(selector) {
     let active = null;
-    console.log(document.querySelectorAll(selector));
     document.querySelectorAll(selector).forEach(function(element) {
         element.addEventListener("mouseenter", function(e) {
             active = e.target;
