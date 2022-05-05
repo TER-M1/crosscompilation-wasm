@@ -13,6 +13,8 @@ body, html {
 
 .track-editor {
     padding-top: 39px;
+    padding-bottom: 28px;
+    /*overflow-y: auto;*/
     height: 67%;
     display: flex;
     flex-direction: column;
@@ -20,10 +22,9 @@ body, html {
 }
 
 .plugin-editor {
-    margin-top: 28px;
+    /*margin-top: 28px;*/
     height: 33%;
     background: #1C1E21;
-    overflow-y: auto;
     border: 1px solid black;
     border-top: none;
     z-index: 2;
@@ -83,7 +84,7 @@ body, html {
     flex-direction: column;
     flex-wrap: nowrap;
     background-color: #1C1E21;
-    overflow: scroll;
+    overflow-y: scroll;
 }
 
 .wave-form {
@@ -92,6 +93,7 @@ body, html {
     min-height: 100px;
     border: 1px solid black;
     width: 2000px;
+    max-height: 100px;
 }
 
 /* Track Element */

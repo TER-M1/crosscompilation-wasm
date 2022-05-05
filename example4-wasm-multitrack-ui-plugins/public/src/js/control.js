@@ -73,7 +73,6 @@ class Selector {
 
 function scrollSync(selector) {
     let active = null;
-    console.log(document.querySelectorAll(selector));
     document.querySelectorAll(selector).forEach(function(element) {
         element.addEventListener("mouseenter", function(e) {
             active = e.target;
@@ -94,24 +93,10 @@ function scrollSync(selector) {
 
 scrollSync(".scroll-sync");
 
-$('.ui.dropdown').dropdown({
-    values: [
-        {
-            name: 'Male',
-            value: 'path1',
-            class: 'item soundM'
-        },
-        {
-            name: 'Female',
-            value: 'path2',
-            class: 'item soundM'
-        },
-        {
-            name:  'test',
-            class: 'item soundM'
-        }
-    ]
+$('.ui.dropdown.settings-menu').dropdown({
+    action: 'hide',
 });
+
 
 export{Selector} ;
 

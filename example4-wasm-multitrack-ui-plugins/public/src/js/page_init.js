@@ -1,3 +1,6 @@
+import {audioCtx, AudioTrack, mainAudio, SimpleAudioWorkletNode} from "./audio_loader.js";
+import {Selector} from "./control.js";
+
 export function activateMainVolume(mainAudio, val) {
     mainAudio.setVolume(val);
     mainAudio.saveStateVolume(val);
@@ -22,7 +25,44 @@ export function exploreTracks() {
     fetch('http://localhost:80/track')
         .then(res => res.json())
         .then((output) => {
-            console.log("output: ", output);
+
+            let values = output.tracks
+                .map(track => ({
+                    name: track.trackname,
+                    value: track.id,
+                    class: `item multitrack-item${track.id}`,
+                }));
+
+            $('.ui.dropdown.add-multitrack').dropdown({
+                action: 'hide',
+                values: values
+            });
+            attachControl(values);
+            const selector = new Selector(mainAudio.tracks);
         })
         .catch(err => console.log(err));
+}
+
+function attachControl(values) {
+    values.forEach(value => {
+        let el = document.querySelector('.item.multitrack-item'+value.value);
+        el.addEventListener('click', () => {
+            let asyncAddTrack = [];
+            fetch('http://localhost:80/track/'+value.value)
+                .then(res => res.json())
+                .then(async (output) => {
+                    let soundList = output.soundList;
+                    for (let i = 0; i < soundList.length; i++) {
+                        let path = `${output.path}/${soundList[i].name}`
+                        asyncAddTrack.push(mainAudio.addTrack(
+                            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), path)
+                        ));
+                    }
+                    let res = await Promise.all(
+                        asyncAddTrack
+                    )
+                })
+                .catch(err => console.log(err));
+        })
+    })
 }

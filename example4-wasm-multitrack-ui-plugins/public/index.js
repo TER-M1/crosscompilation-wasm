@@ -4,7 +4,6 @@ import {updateCursorTracks} from "./src/js/playhead.js";
 
 import {Selector} from "./src/js/control.js";
 
-
 const btnStart = document.getElementById("btn-start");
 const zoomIn = document.getElementById("btn-zoom-in");
 const zoomOut = document.getElementById("btn-zoom-out");
@@ -34,28 +33,6 @@ var intervalCursorTracks = undefined;
      */
     activateMainVolume(mainAudio, startVolume);
     exploreTracks();
-
-    /*
-    MULTI TRACKS INITIALZATION
-     */
-    let asyncAddTrack = [
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/test.mp3")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/bass.wav")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/drums.wav")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/other.wav")),
-        mainAudio.addTrack(
-            new AudioTrack(audioCtx, new SimpleAudioWorkletNode(audioCtx), "./song/multitrack/MichaelJackson-BillieJean/vocals.wav")),
-    ]
-    let res = await Promise.all(
-        asyncAddTrack
-    )
-    console.log(res);
-    console.log(mainAudio.tracks);
-    console.log(mainAudio.maxGlobalTimer);
 
 
     /*
@@ -145,5 +122,5 @@ var intervalCursorTracks = undefined;
             mainAudio.unMute();
         }
     };
-    const selector = new Selector(mainAudio.tracks);
+
 })();
