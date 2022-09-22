@@ -4,9 +4,6 @@ import {LineDrawer, drawBuffer} from './src/js/drawers.js';
 import {MainAudio, AudioTrack, SimpleAudioWorkletNode} from "./src/js/audio_loader.js";
 
 
-
-
-
 //@ts-check
 
 // const audioUrl = "https://wasabi.i3s.unice.fr/WebAudioPluginBank/BasketCaseGreendayriffDI.mp3";

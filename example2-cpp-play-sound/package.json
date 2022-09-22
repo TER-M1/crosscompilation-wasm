@@ -1,0 +1,24 @@
+{
+  "name": "audio-player-worklet",
+  "version": "0.0.0",
+  "description": "Simple AudioWorklet Processor to read an audio file",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fr0stbyter/audio-player-worklet.git"
+  },
+  "keywords": [
+    "audio",
+    "webaudio",
+    "audioworklet"
+  ],
+  "author": "shren",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fr0stbyter/audio-player-worklet/issues"
+  },
+  "homepage": "https://github.com/fr0stbyter/audio-player-worklet#readme"
+}
